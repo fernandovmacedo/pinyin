@@ -282,16 +282,6 @@
             font-weight: 600;
         }
 
-        .validation-button::before {
-            content: "";
-            display: inline-block;
-            width: 0.55em;
-            height: 0.55em;
-            margin-right: 0.5em;
-            border-radius: 50%;
-            background: currentColor;
-        }
-
         .validation-button[aria-pressed="false"] {
             color: var(--text-secondary);
             background: var(--bg-secondary);
@@ -393,7 +383,7 @@
     <div class="button-row">
         <button id="copy-btn">Copy text</button>
         <button id="clear-btn">Clear</button>
-        <button class="validation-button" id="validation-toggle" type="button" aria-pressed="true" aria-label="Pinyin checking is on">Check Pinyin: On</button>
+        <button class="validation-button" id="validation-toggle" type="button" aria-pressed="true" aria-label="Pinyin checking is on">Check: On</button>
     </div>
 
     <div class="instructions">
@@ -907,7 +897,7 @@
         function setPinyinValidation(enabled) {
             pinyinValidationEnabled = enabled;
             validationToggle.setAttribute('aria-pressed', String(enabled));
-            validationToggle.textContent = `Check Pinyin: ${enabled ? 'On' : 'Off'}`;
+            validationToggle.textContent = `Check: ${enabled ? 'On' : 'Off'}`;
             validationToggle.setAttribute('aria-label', `Pinyin checking is ${enabled ? 'on' : 'off'}`);
             scheduleValidation();
         }
@@ -1566,9 +1556,9 @@
                 assertEq(validationToggle.getAttribute('aria-pressed'), 'true');
                 setPinyinValidation(false);
                 assertEq(JSON.stringify(getInvalidPinyinRanges('bng')), '[]');
-                assertEq(validationToggle.textContent, 'Check Pinyin: Off');
+                assertEq(validationToggle.textContent, 'Check: Off');
                 setPinyinValidation(true);
-                assertEq(validationToggle.textContent, 'Check Pinyin: On');
+                assertEq(validationToggle.textContent, 'Check: On');
             });
             test('Renders an underline for invalid Pinyin', function() {
                 editor.value = 'bng';
