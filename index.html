@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pinyin Typing</title>
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f5f5f5;
+            --bg-tertiary: #fff;
+            --text-primary: #000000;
+            --text-secondary: #666666;
+            --text-tertiary: #999999;
+            --border-color: #dddddd;
+            --border-color-dark: #dddddd;
+            --accent-color: #4a90e2;
+            --accent-hover: #357abd;
+            --kbd-bg: #ffffff;
+            --kbd-border: #cccccc;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f5f5f5;
+            --bg-tertiary: #fff;
+            --text-primary: #000000;
+            --text-secondary: #666666;
+            --text-tertiary: #999999;
+            --border-color: #dddddd;
+            --border-color-dark: #dddddd;
+            --accent-color: #4a90e2;
+            --accent-hover: #357abd;
+            --kbd-bg: #ffffff;
+            --kbd-border: #cccccc;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2a2a2a;
+            --bg-tertiary: #3a3a3a;
+            --text-primary: #e0e0e0;
+            --text-secondary: #888888;
+            --text-tertiary: #666666;
+            --border-color: #444444;
+            --border-color-dark: #555555;
+            --accent-color: #5a9fe2;
+            --accent-hover: #4a8fd2;
+            --kbd-bg: #3a3a3a;
+            --kbd-border: #555555;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme]) {
+                --bg-primary: #1a1a1a;
+                --bg-secondary: #2a2a2a;
+                --bg-tertiary: #3a3a3a;
+                --text-primary: #e0e0e0;
+                --text-secondary: #888888;
+                --text-tertiary: #666666;
+                --border-color: #444444;
+                --border-color-dark: #555555;
+                --accent-color: #5a9fe2;
+                --accent-hover: #4a8fd2;
+                --kbd-bg: #3a3a3a;
+                --kbd-border: #555555;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            position: relative;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .instructions {
+            background: var(--bg-secondary);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .instructions h2 {
+            font-size: 1.1rem;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 5px;
+        }
+
+        .instructions kbd {
+            background: var(--kbd-bg);
+            border: 1px solid var(--kbd-border);
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+
+        .editor-container {
+            position: relative;
+            margin-bottom: 10px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+        }
+
+        .validation-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            overflow: hidden;
+            pointer-events: none;
+            border-radius: 8px;
+        }
+
+        #validation-highlights {
+            min-height: 200px;
+            padding: 15px;
+            font-family: "Segoe UI", "Microsoft YaHei", "SimHei", Arial, sans-serif;
+            font-size: 18px;
+            line-height: 1.6;
+            color: transparent;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+
+        .invalid-pinyin {
+            pointer-events: auto;
+            cursor: help;
+            text-decoration-line: underline;
+            text-decoration-style: wavy;
+            text-decoration-color: #d92d20;
+            text-decoration-thickness: 1.5px;
+            text-underline-offset: 3px;
+        }
+
+        .diagnostic-card {
+            position: fixed;
+            z-index: 3;
+            width: min(360px, calc(100vw - 32px));
+            padding: 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 14px;
+            line-height: 1.45;
+        }
+
+        .diagnostic-card[hidden] {
+            display: none;
+        }
+
+        .diagnostic-card h2 {
+            margin: 0 0 4px;
+            font-size: 1rem;
+        }
+
+        .diagnostic-card p {
+            margin: 8px 0;
+        }
+
+        .diagnostic-card .diagnostic-zh {
+            color: var(--text-secondary);
+        }
+
+        .diagnostic-card .diagnostic-examples {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            color: var(--text-secondary);
+        }
+
+        .diagnostic-card .diagnostic-sources {
+            margin-top: 10px;
+            font-size: 12px;
+        }
+
+        .diagnostic-card a {
+            color: var(--accent-color);
+        }
+
+        #editor {
+            display: block;
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            min-height: 200px;
+            font-size: 18px;
+            line-height: 1.6;
+            padding: 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            resize: vertical;
+            font-family: "Segoe UI", "Microsoft YaHei", "SimHei", Arial, sans-serif;
+            background: transparent;
+            color: var(--text-primary);
+        }
+
+        #editor:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .composition-indicator {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 5px;
+            min-height: 20px;
+        }
+
+        .rules-status {
+            min-height: 20px;
+            margin-top: 5px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .rules-status.error {
+            color: #d92d20;
+        }
+
+        .button-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: var(--accent-color);
+            color: white;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: var(--accent-hover);
+        }
+
+        .validation-button {
+            color: #ffffff;
+            background: #16803c;
+            border: 1px solid #126b32;
+            font-weight: 600;
+        }
+
+        .validation-button::before {
+            content: "";
+            display: inline-block;
+            width: 0.55em;
+            height: 0.55em;
+            margin-right: 0.5em;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .validation-button[aria-pressed="false"] {
+            color: var(--text-secondary);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            font-weight: 400;
+        }
+
+        .validation-button:hover {
+            background: #0f6c31;
+        }
+
+        .validation-button[aria-pressed="false"]:hover {
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+        }
+
+        .validation-button:focus-visible {
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+
+        .theme-selector {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 3px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-secondary);
+        }
+
+        .theme-button {
+            display: grid;
+            place-items: center;
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border: 0;
+            border-radius: 5px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            background: transparent;
+        }
+
+        .theme-button:hover,
+        .theme-button[aria-pressed="true"] {
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+        }
+
+        .theme-button:focus-visible {
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+
+        .theme-button svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 1.8;
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                padding-right: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Pinyin Typing</h1>
+    <p class="subtitle">Type Pinyin with tone marks — just type the syllable followed by 1-4</p>
+
+    <div class="theme-selector" aria-label="Theme">
+        <button class="theme-button" type="button" data-theme-choice="auto" aria-label="Use system theme" aria-pressed="true" title="Use system theme">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"></rect><path d="M8 21h8M12 17v4"></path></svg>
+        </button>
+        <button class="theme-button" type="button" data-theme-choice="light" aria-label="Use light theme" aria-pressed="false" title="Use light theme">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg>
+        </button>
+        <button class="theme-button" type="button" data-theme-choice="dark" aria-label="Use dark theme" aria-pressed="false" title="Use dark theme">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.4 15.2A8.5 8.5 0 0 1 8.8 3.6 8.5 8.5 0 1 0 20.4 15.2Z"></path></svg>
+        </button>
+    </div>
+
+    <div class="editor-container">
+        <div class="validation-overlay" aria-hidden="true"><div id="validation-highlights"></div></div>
+        <textarea id="editor" placeholder="Start typing Pinyin here..." spellcheck="false"></textarea>
+    </div>
+    <div class="composition-indicator" id="composition-indicator"></div>
+    <div class="rules-status" id="rules-status" role="status">Loading Pinyin rules…</div>
+
+    <div class="button-row">
+        <button id="copy-btn">Copy text</button>
+        <button id="clear-btn">Clear</button>
+        <button class="validation-button" id="validation-toggle" type="button" aria-pressed="true" aria-label="Pinyin checking is on">Check Pinyin: On</button>
+    </div>
+
+    <div class="instructions">
+        <h2>How to use</h2>
+        <ul>
+            <li>Type a syllable followed by <kbd>1</kbd>, <kbd>2</kbd>, <kbd>3</kbd>, or <kbd>4</kbd> to add the tone mark</li>
+            <li>Type <kbd>v</kbd> to enter <strong>ü</strong> and <kbd>V</kbd> for <strong>Ü</strong> (type <kbd>vv</kbd> for a literal <kbd>v</kbd>)</li>
+            <li>Press <kbd>Enter</kbd> to accept the current syllable</li>
+            <li>Press <kbd>Escape</kbd> to cancel the current syllable</li>
+            <li>Backspace works normally</li>
+            <li><strong>Check Pinyin</strong> underlines invalid syllables; turn it off when writing non-Pinyin text</li>
+        </ul>
+        <p><strong>Example:</strong> Type <code>Ni3 hao3! Wo3 jiao4 Li3.</code> to get <strong>Nǐ hǎo! Wǒ jiào Lǐ.</strong></p>
+    </div>
+
+    <aside class="diagnostic-card" id="diagnostic-card" role="dialog" aria-label="Pinyin rule explanation" aria-live="polite" hidden></aside>
+
+    <script>
+    (function() {
+        'use strict';
+
+        // Theme handling
+        function setTheme(theme) {
+            if (theme === 'auto') {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.removeItem('theme');
+            } else {
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+            }
+
+            // Update theme buttons
+            document.querySelectorAll('[data-theme-choice]').forEach(button => {
+                button.setAttribute('aria-pressed', String(button.dataset.themeChoice === theme));
+            });
+        }
+
+        // Load saved theme or default to auto
+        setTheme(localStorage.getItem('theme') || 'auto');
+
+        document.querySelectorAll('[data-theme-choice]').forEach(button => {
+            button.addEventListener('click', function() {
+                setTheme(this.dataset.themeChoice);
+            });
+        });
+
+        // Vowel table: 12 rows of 5 [untoned, tone1, tone2, tone3, tone4]
+        const VOWELS = [
+            'a', 0x0101, 0x00E1, 0x01CE, 0x00E0,  // a, ā, á, ǎ, à
+            'e', 0x0113, 0x00E9, 0x011B, 0x00E8,  // e, ē, é, ě, è
+            'i', 0x012B, 0x00ED, 0x01D0, 0x00EC,  // i, ī, í, ǐ, ì
+            'o', 0x014D, 0x00F3, 0x01D2, 0x00F2,  // o, ō, ó, ǒ, ò
+            'u', 0x016B, 0x00FA, 0x01D4, 0x00F9,  // u, ū, ú, ǔ, ù
+            0x00FC, 0x01D6, 0x01D8, 0x01DA, 0x01DC,  // ü, ǖ, ǘ, ǚ, ǜ
+            'A', 0x0100, 0x00C1, 0x01CD, 0x00C0,  // A, Ā, Á, Ǎ, À
+            'E', 0x0112, 0x00C9, 0x011A, 0x00C8,  // E, Ē, É, Ě, È
+            'I', 0x012A, 0x00CD, 0x01CF, 0x00CC,  // I, Ī, Í, Ǐ, Ì
+            'O', 0x014C, 0x00D3, 0x01D1, 0x00D2,  // O, Ō, Ó, Ǒ, Ò
+            'U', 0x016A, 0x00DA, 0x01D3, 0x00D9,  // U, Ū, Ú, Ǔ, Ù
+            0x00DC, 0x01D5, 0x01D7, 0x01D9, 0x01DB   // Ü, Ǖ, Ǘ, Ǚ, Ǜ
+        ];
+
+        const NUM_VOWELS = 60;
+        const MAX_COMPOSITION_LENGTH = 50;
+        const SHIFTED_COMPOSITION_LENGTH = 20;
+        // rules.json is the single source of truth for valid syllables, teaching
+        // explanations, and citations. It is deliberately kept outside this file so
+        // linguistic content can be reviewed without changing editor behavior.
+        let pinyinRules = null;
+        let PINYIN_SYLLABLES = new Set();
+        const TONED_VOWEL_BASES = new Map([
+            ['ā', 'a'], ['á', 'a'], ['ǎ', 'a'], ['à', 'a'], ['ē', 'e'], ['é', 'e'], ['ě', 'e'], ['è', 'e'],
+            ['ī', 'i'], ['í', 'i'], ['ǐ', 'i'], ['ì', 'i'], ['ō', 'o'], ['ó', 'o'], ['ǒ', 'o'], ['ò', 'o'],
+            ['ū', 'u'], ['ú', 'u'], ['ǔ', 'u'], ['ù', 'u'], ['ǖ', 'ü'], ['ǘ', 'ü'], ['ǚ', 'ü'], ['ǜ', 'ü'],
+        ]);
+
+        // State
+        let compStart = null;  // Start index of composition, or null if not composing
+        let pinyinValidationEnabled = true;
+        let validationFrame = null;
+        let pinnedDiagnostic = null;
+        let tooltipHideTimer = null;
+
+        const editor = document.getElementById('editor');
+        const indicator = document.getElementById('composition-indicator');
+        const highlights = document.getElementById('validation-highlights');
+        const validationToggle = document.getElementById('validation-toggle');
+        const diagnosticCard = document.getElementById('diagnostic-card');
+        const rulesStatus = document.getElementById('rules-status');
+
+        // Replace [start, end) of the editor through execCommand so the browser
+        // records the change in the textarea's native undo history; setRangeText
+        // bypasses undo and is kept only as a fallback.
+        function replaceRange(start, end, text) {
+            editor.focus();
+            editor.setSelectionRange(start, end);
+            if (start === end && !text) {
+                return;
+            }
+            const done = text
+                ? document.execCommand('insertText', false, text)
+                : document.execCommand('delete');
+            if (!done) {
+                editor.setRangeText(text, start, end, text ? 'end' : 'select');
+            }
+        }
+
+        // Convert Unicode code point to character
+        function chr(codePoint) {
+            if (typeof codePoint === 'number') {
+                return String.fromCodePoint(codePoint);
+            }
+            return codePoint; // Already a string
+        }
+
+        // Lookup character in vowel array
+        function lookupChar(ch) {
+            for (let i = 0; i < NUM_VOWELS; i++) {
+                if (chr(VOWELS[i]) === ch) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        // Check if character is a Pinyin character (letter or toned vowel)
+        function isPinyinCharacter(ch) {
+            const code = ch.codePointAt(0);
+            return ((code >= 0x61 && code <= 0x7A) ||  // a-z
+                    (code >= 0x41 && code <= 0x5A) ||  // A-Z
+                    (lookupChar(ch) > -1));
+        }
+
+        function normalizePinyin(text) {
+            return Array.from(text.toLowerCase(), ch => {
+                if (TONED_VOWEL_BASES.has(ch)) {
+                    return TONED_VOWEL_BASES.get(ch);
+                }
+                return ch === 'v' ? 'ü' : ch;
+            }).join('');
+        }
+
+        function validateRulesManifest(manifest) {
+            if (!manifest || !Array.isArray(manifest.syllables) || !Array.isArray(manifest.rules) ||
+                !Array.isArray(manifest.sources) || manifest.syllables.length === 0) {
+                throw new Error('The rules manifest is missing required arrays.');
+            }
+
+            const sourceIds = new Set(manifest.sources.map(source => source.id));
+            for (const source of manifest.sources) {
+                if (!source.id || !source.url || !source.title?.en || !source.title?.zh) {
+                    throw new Error('A source record is incomplete.');
+                }
+            }
+            for (const rule of manifest.rules) {
+                if (!rule.id || !rule.title?.en || !rule.title?.zh || !rule.explanation?.en ||
+                    !rule.explanation?.zh || !Array.isArray(rule.sources) || rule.sources.length === 0) {
+                    throw new Error('A teaching rule is incomplete.');
+                }
+                if (rule.sources.some(sourceId => !sourceIds.has(sourceId))) {
+                    throw new Error(`Rule ${rule.id} refers to an unknown source.`);
+                }
+            }
+        }
+
+        function setRulesStatus(message, isError = false) {
+            rulesStatus.textContent = message;
+            rulesStatus.classList.toggle('error', isError);
+        }
+
+        async function loadPinyinRules() {
+            try {
+                const response = await fetch('rules.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                const manifest = await response.json();
+                validateRulesManifest(manifest);
+                pinyinRules = manifest;
+                PINYIN_SYLLABLES = new Set(manifest.syllables);
+                setRulesStatus('');
+                scheduleValidation();
+                return manifest;
+            } catch (error) {
+                setPinyinValidation(false);
+                validationToggle.disabled = true;
+                setRulesStatus('Unable to load Pinyin rules. Serve this editor over HTTP and reload.', true);
+                console.error('Unable to load rules.json:', error);
+                throw error;
+            }
+        }
+
+        function getInitialAndFinal(syllable) {
+            const initials = pinyinRules.rules
+                .flatMap(rule => rule.initials || [])
+                .sort((first, second) => second.length - first.length);
+            const initial = initials.find(candidate => syllable.startsWith(candidate)) || '';
+            return { initial, final: syllable.substring(initial.length) };
+        }
+
+        function getRule(ruleId) {
+            return pinyinRules.rules.find(rule => rule.id === ruleId);
+        }
+
+        function getDiagnostic(syllable, ruleId = null, suggestion = '') {
+            const normalized = normalizePinyin(syllable);
+            const { initial, final } = getInitialAndFinal(normalized);
+            const rule = (ruleId && getRule(ruleId)) || pinyinRules.rules.find(candidate =>
+                candidate.initials.includes(initial) && initial && final
+            ) || getRule('initial-final-table-mismatch');
+            return { rule, syllable, initial, final: final || '∅', suggestion };
+        }
+
+        function interpolate(template, diagnostic) {
+            return template.replace(/\{\{(initial|final|syllable|suggestion)\}\}/g, (_, key) => diagnostic[key]);
+        }
+
+        function findSyllableSegments(run) {
+            const normalized = normalizePinyin(run);
+            const best = Array(normalized.length + 1).fill(null);
+            best[0] = [];
+
+            for (let index = 0; index < normalized.length; index++) {
+                if (!best[index]) {
+                    continue;
+                }
+                for (const syllable of PINYIN_SYLLABLES) {
+                    if (!normalized.startsWith(syllable, index)) {
+                        continue;
+                    }
+                    const end = index + syllable.length;
+                    const candidate = best[index].concat({ start: index, end, syllable });
+                    if (!best[end] || candidate.length < best[end].length) {
+                        best[end] = candidate;
+                    }
+                }
+            }
+            return best[normalized.length] || [];
+        }
+
+        function getSpellingDiagnostics(run) {
+            const diagnostics = [];
+            for (const segment of findSyllableSegments(run)) {
+                const spelling = run.substring(segment.start, segment.end);
+                const tones = Array.from(spelling, ch => lookupChar(ch) % 5).filter(tone => tone > 0);
+                if (tones.length !== 1) {
+                    continue;
+                }
+                const suggestion = setTone(segment.syllable, tones[0]);
+                if (spelling.toLowerCase() !== suggestion) {
+                    diagnostics.push({
+                        start: segment.start,
+                        end: segment.end,
+                        diagnostic: getDiagnostic(spelling, 'tone-mark-placement', suggestion),
+                    });
+                }
+            }
+
+            const normalized = normalizePinyin(run);
+            // Carry the run's tone mark over to a respelled suggestion so, for
+            // example, iǒu suggests yǒu rather than a toneless you.
+            const runTone = Array.from(run, ch => lookupChar(ch) % 5).find(value => value > 0) || 0;
+            const withRunTone = base => runTone ? setTone(base, runTone) : base;
+            const zeroOnsetSpellings = new Map([
+                ['i', 'yi'], ['ia', 'ya'], ['ie', 'ye'], ['iao', 'yao'], ['iou', 'you'], ['ian', 'yan'],
+                ['iang', 'yang'], ['in', 'yin'], ['ing', 'ying'], ['iong', 'yong'],
+                ['u', 'wu'], ['ua', 'wa'], ['uo', 'wo'], ['uai', 'wai'], ['uei', 'wei'],
+                ['uan', 'wan'], ['uen', 'wen'], ['uang', 'wang'], ['ueng', 'weng'],
+                ['ü', 'yu'], ['üe', 'yue'], ['üan', 'yuan'], ['ün', 'yun'],
+                ['iu', 'you'], ['ui', 'wei'], ['un', 'wen'],
+            ]);
+            const zeroOnsetSuggestion = zeroOnsetSpellings.get(normalized);
+            if (zeroOnsetSuggestion && PINYIN_SYLLABLES.has(zeroOnsetSuggestion)) {
+                diagnostics.push({
+                    start: 0,
+                    end: run.length,
+                    diagnostic: getDiagnostic(run, 'zero-onset-spelling', withRunTone(zeroOnsetSuggestion)),
+                });
+            }
+            const { initial } = getInitialAndFinal(normalized);
+            const abbreviations = new Map([['iou', 'iu'], ['uei', 'ui'], ['uen', 'un']]);
+            for (const [longFinal, shortFinal] of abbreviations) {
+                if (initial && normalized === initial + longFinal && PINYIN_SYLLABLES.has(initial + shortFinal)) {
+                    diagnostics.push({
+                        start: 0,
+                        end: run.length,
+                        diagnostic: getDiagnostic(run, 'abbreviated-final-spelling', withRunTone(initial + shortFinal)),
+                    });
+                }
+            }
+
+            const umlautMatch = normalized.match(/^([jqx])ü(.*)$/);
+            if (umlautMatch) {
+                const suggestionBase = umlautMatch[1] + 'u' + umlautMatch[2];
+                if (PINYIN_SYLLABLES.has(suggestionBase)) {
+                    diagnostics.push({
+                        start: 0,
+                        end: run.length,
+                        diagnostic: getDiagnostic(run, 'umlaut-spelling-after-palatal', withRunTone(suggestionBase)),
+                    });
+                }
+            }
+            return diagnostics;
+        }
+
+        function findInvalidOffsets(run) {
+            const normalized = normalizePinyin(run);
+            const best = Array(normalized.length + 1).fill(null);
+            best[0] = { score: 0, invalid: [] };
+
+            for (let index = 0; index < normalized.length; index++) {
+                if (!best[index]) {
+                    continue;
+                }
+
+                const skipped = {
+                    score: best[index].score,
+                    invalid: best[index].invalid.concat(index),
+                };
+                if (!best[index + 1] || skipped.score > best[index + 1].score) {
+                    best[index + 1] = skipped;
+                }
+
+                for (const syllable of PINYIN_SYLLABLES) {
+                    if (!normalized.startsWith(syllable, index)) {
+                        continue;
+                    }
+                    const end = index + syllable.length;
+                    const candidate = {
+                        score: best[index].score + syllable.length,
+                        invalid: best[index].invalid,
+                    };
+                    if (!best[end] || candidate.score > best[end].score) {
+                        best[end] = candidate;
+                    }
+                }
+            }
+
+            return best[normalized.length].invalid;
+        }
+
+        function getInvalidPinyinRanges(text) {
+            if (!pinyinValidationEnabled || !pinyinRules) {
+                return [];
+            }
+
+            const invalid = new Set();
+            const diagnosticsByStart = new Map();
+            let runStart = null;
+            const compositionEnd = compStart === null ? null : editor.selectionStart;
+
+            function validateRun(end) {
+                if (runStart === null) {
+                    return;
+                }
+                const run = text.substring(runStart, end);
+                for (const spellingDiagnostic of getSpellingDiagnostics(run)) {
+                    const start = runStart + spellingDiagnostic.start;
+                    diagnosticsByStart.set(start, spellingDiagnostic.diagnostic);
+                    for (let cursor = start; cursor < runStart + spellingDiagnostic.end; cursor++) {
+                        invalid.add(cursor);
+                    }
+                }
+                const invalidOffsets = findInvalidOffsets(run);
+                for (const offset of invalidOffsets) {
+                    const index = runStart + offset;
+                    if (compStart === null || index < compStart || index >= compositionEnd) {
+                        invalid.add(index);
+                    }
+                }
+                // If a stray initial is followed by a vowel-only syllable (jo, qa,
+                // xe), keep the attempted initial-final combination together. This
+                // lets the learner see the relevant combination rule instead of a
+                // misleading diagnosis for the initial letter alone.
+                for (const offset of invalidOffsets) {
+                    const { initial, final } = getInitialAndFinal(normalizePinyin(run[offset]));
+                    if (!initial || final) {
+                        continue;
+                    }
+                    for (let cursor = offset + 1; cursor < run.length && lookupChar(run[cursor]) > -1; cursor++) {
+                        const index = runStart + cursor;
+                        if (compStart === null || index < compStart || index >= compositionEnd) {
+                            invalid.add(index);
+                        }
+                    }
+                }
+                runStart = null;
+            }
+
+            for (let index = 0; index < text.length; index++) {
+                if (isPinyinCharacter(text[index])) {
+                    if (runStart === null) {
+                        runStart = index;
+                    }
+                } else {
+                    validateRun(index);
+                }
+            }
+            validateRun(text.length);
+
+            const ranges = [];
+            for (let index = 0; index < text.length; index++) {
+                if (!invalid.has(index)) {
+                    continue;
+                }
+                const start = index;
+                while (invalid.has(index + 1)) {
+                    index++;
+                }
+                const end = index + 1;
+                ranges.push({
+                    start,
+                    end,
+                    diagnostic: diagnosticsByStart.get(start) || getDiagnostic(text.substring(start, end)),
+                });
+            }
+            return ranges;
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/[&<>"']/g, ch => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+            })[ch]);
+        }
+
+        function hideDiagnostic() {
+            pinnedDiagnostic = null;
+            diagnosticCard.hidden = true;
+            diagnosticCard.replaceChildren();
+        }
+
+        function scheduleDiagnosticHide() {
+            clearTimeout(tooltipHideTimer);
+            tooltipHideTimer = setTimeout(() => {
+                if (!pinnedDiagnostic) {
+                    hideDiagnostic();
+                }
+            }, 120);
+        }
+
+        function renderDiagnosticCard(diagnostic) {
+            const { rule } = diagnostic;
+            const sourceById = new Map(pinyinRules.sources.map(source => [source.id, source]));
+            const sources = rule.sources.map(sourceId => sourceById.get(sourceId));
+            diagnosticCard.innerHTML = `
+                <h2>${escapeHtml(rule.title.en)}</h2>
+                <div class="diagnostic-zh"><strong>${escapeHtml(rule.title.zh)}</strong></div>
+                <p>${escapeHtml(interpolate(rule.explanation.en, diagnostic))}</p>
+                <p class="diagnostic-zh">${escapeHtml(interpolate(rule.explanation.zh, diagnostic))}</p>
+                <p class="diagnostic-examples">Contrast / 对照: ${rule.examples.map(escapeHtml).join(', ')}</p>
+                <div class="diagnostic-sources">Sources / 来源: ${sources.map(source =>
+                    `<a href="${escapeHtml(source.url)}" target="_blank" rel="noreferrer">${escapeHtml(source.title.en)}</a>`
+                ).join(' · ')}</div>
+            `;
+        }
+
+        function positionDiagnosticCard(target) {
+            const rect = target.getBoundingClientRect();
+            diagnosticCard.hidden = false;
+            const cardRect = diagnosticCard.getBoundingClientRect();
+            const left = Math.max(16, Math.min(rect.left, window.innerWidth - cardRect.width - 16));
+            const top = rect.bottom + cardRect.height + 12 <= window.innerHeight
+                ? rect.bottom + 8
+                : Math.max(16, rect.top - cardRect.height - 8);
+            diagnosticCard.style.left = `${left}px`;
+            diagnosticCard.style.top = `${top}px`;
+        }
+
+        function showDiagnostic(target, pinned = false) {
+            clearTimeout(tooltipHideTimer);
+            const start = Number(target.dataset.start);
+            const end = Number(target.dataset.end);
+            const diagnostic = getDiagnostic(
+                editor.value.substring(start, end),
+                target.dataset.ruleId || null,
+                target.dataset.suggestion || ''
+            );
+            renderDiagnosticCard(diagnostic);
+            if (pinned) {
+                pinnedDiagnostic = target;
+            }
+            positionDiagnosticCard(target);
+        }
+
+        function renderValidation() {
+            validationFrame = null;
+            const text = editor.value;
+            const ranges = getInvalidPinyinRanges(text);
+            let html = '';
+            let index = 0;
+
+            for (const range of ranges) {
+                html += escapeHtml(text.substring(index, range.start));
+                html += `<span class="pinyin-diagnostic invalid-pinyin" data-start="${range.start}" data-end="${range.end}" data-rule-id="${escapeHtml(range.diagnostic.rule.id)}" data-suggestion="${escapeHtml(range.diagnostic.suggestion)}">${escapeHtml(text.substring(range.start, range.end))}</span>`;
+                index = range.end;
+            }
+            highlights.innerHTML = html + escapeHtml(text.substring(index));
+            syncValidationScroll();
+        }
+
+        function scheduleValidation() {
+            if (validationFrame === null) {
+                validationFrame = requestAnimationFrame(renderValidation);
+            }
+        }
+
+        function syncValidationScroll() {
+            highlights.style.transform = `translate(${-editor.scrollLeft}px, ${-editor.scrollTop}px)`;
+        }
+
+        function setPinyinValidation(enabled) {
+            pinyinValidationEnabled = enabled;
+            validationToggle.setAttribute('aria-pressed', String(enabled));
+            validationToggle.textContent = `Check Pinyin: ${enabled ? 'On' : 'Off'}`;
+            validationToggle.setAttribute('aria-label', `Pinyin checking is ${enabled ? 'on' : 'off'}`);
+            scheduleValidation();
+        }
+
+        // Find the last contiguous run of vowels in the string
+        // Returns {first: index, last: index} or null if no vowels found
+        function findLastVowels(str) {
+            let first = null;
+            let last = null;
+
+            for (let i = str.length - 1; i >= 0; i--) {
+                const ch = str[i];
+                if (lookupChar(ch) > -1) {
+                    if (last === null) {
+                        last = i;
+                        first = i;
+                    } else if (i === first - 1) {
+                        first = i;
+                    } else {
+                        break;
+                    }
+                } else if (last !== null) {
+                    break;
+                }
+            }
+
+            if (last === null) {
+                return null;
+            }
+            return { first, last };
+        }
+
+        // Remove tone marks from a vowel run, returning the modified string
+        function removeTone(str, first, last) {
+            let result = '';
+            for (let i = 0; i < str.length; i++) {
+                const ch = str[i];
+                if (i >= first && i <= last) {
+                    const idx = lookupChar(ch);
+                    if (idx > -1) {
+                        // Strip tone: idx - idx % 5 gives the untoned base
+                        result += chr(VOWELS[idx - idx % 5]);
+                    } else {
+                        result += ch;
+                    }
+                } else {
+                    result += ch;
+                }
+            }
+            return result;
+        }
+
+        // Apply tone to a vowel run
+        function setTone(str, tone) {
+            const vowels = findLastVowels(str);
+            if (!vowels) {
+                return str;  // No vowels, no change
+            }
+
+            // First remove existing tones
+            let result = removeTone(str, vowels.first, vowels.last);
+
+            // Recalculate vowels in the result (string may be different length)
+            const newVowels = findLastVowels(result);
+            if (!newVowels) {
+                return result;
+            }
+
+            // Determine which vowel gets the tone
+            let toneIndex = null;
+
+            // Search from the end
+            for (let i = newVowels.last; i >= newVowels.first; i--) {
+                const ch = result[i];
+                // a and e always get the tone
+                if (ch === 'a' || ch === 'A' || ch === 'e' || ch === 'E') {
+                    toneIndex = i;
+                    break;
+                }
+                // o gets the tone in an "ou" combination
+                else if ((ch === 'u' || ch === 'U') && i > newVowels.first) {
+                    const pred = result[i - 1];
+                    if (pred === 'o' || pred === 'O') {
+                        toneIndex = i - 1;
+                        break;
+                    }
+                }
+            }
+
+            // If no special case, last vowel gets the tone
+            if (toneIndex === null) {
+                toneIndex = newVowels.last;
+            }
+
+            // Apply the tone
+            const ch = result[toneIndex];
+            const idx = lookupChar(ch);
+            if (idx > -1 && idx % 5 === 0) {
+                // Valid untoned vowel, add tone
+                const tonedChar = chr(VOWELS[idx + tone]);
+                result = result.substring(0, toneIndex) + tonedChar + result.substring(toneIndex + 1);
+            }
+
+            return result;
+        }
+
+        // Handle the 'v' character (inserts ü, double-v for literal v). The case
+        // of the typed key decides ü vs Ü, so title-case words like Nǚshì keep a
+        // lowercase vowel after an uppercase initial.
+        function handleVCharacter(text, useUpper = false) {
+            const lastChar = text.length > 0 ? text[text.length - 1] : '';
+
+            if (lastChar === chr(0x00FC) || lastChar === chr(0x00DC)) {
+                // Double-v: replace with a literal v matching the typed case
+                return text.substring(0, text.length - 1) + (useUpper ? 'V' : 'v');
+            }
+
+            return text + chr(useUpper ? 0x00DC : 0x00FC);
+        }
+
+        // Get current composition text
+        function getCompositionText() {
+            if (compStart === null) {
+                return '';
+            }
+            return editor.value.substring(compStart, editor.selectionStart);
+        }
+
+        // Update the composition indicator
+        function updateIndicator() {
+            if (compStart === null) {
+                indicator.textContent = '';
+                scheduleValidation();
+                return;
+            }
+            const text = getCompositionText();
+            indicator.textContent = 'Composition: ' + text;
+            scheduleValidation();
+        }
+
+        // Commit the current composition
+        function commitComposition() {
+            compStart = null;
+            updateIndicator();
+        }
+
+        // Cancel the current composition (delete text)
+        function cancelComposition() {
+            if (compStart === null) {
+                return;
+            }
+
+            replaceRange(compStart, editor.selectionEnd, '');
+            compStart = null;
+            updateIndicator();
+        }
+
+        // Shift composition if it's too long
+        function shiftCompositionIfFull() {
+            if (compStart === null) {
+                return;
+            }
+
+            const text = getCompositionText();
+            if (text.length < MAX_COMPOSITION_LENGTH) {
+                return;
+            }
+
+            // Shift to keep last SHIFTED_COMPOSITION_LENGTH characters
+            const shiftAmount = text.length - SHIFTED_COMPOSITION_LENGTH;
+            compStart += shiftAmount;
+
+            // Update indicator since composition changed
+            updateIndicator();
+        }
+
+        // Handle keydown event
+        function handleKeyDown(e) {
+            // Only handle keys without modifiers (except Shift)
+            if (e.ctrlKey || e.altKey || e.metaKey) {
+                if (compStart !== null) {
+                    // Commit composition on modifier key
+                    commitComposition();
+                }
+                return;  // Let default handling proceed
+            }
+
+            const key = e.key;
+
+            // Handle Enter
+            if (key === 'Enter') {
+                if (compStart !== null) {
+                    e.preventDefault();
+                    commitComposition();
+                }
+                // Otherwise let Enter through (inserts newline)
+                return;
+            }
+
+            // Handle Escape
+            if (key === 'Escape') {
+                if (compStart !== null) {
+                    e.preventDefault();
+                    cancelComposition();
+                }
+                return;
+            }
+
+            // Handle Backspace
+            if (key === 'Backspace') {
+                if (compStart !== null) {
+                    const selStart = editor.selectionStart;
+                    const selEnd = editor.selectionEnd;
+
+                    // If there's a selection, delete it
+                    if (selStart !== selEnd) {
+                        e.preventDefault();
+                        replaceRange(selStart, selEnd, '');
+                        // If selection starts before compStart, composition is gone
+                        if (selStart < compStart) {
+                            compStart = null;
+                        }
+                        updateIndicator();
+                        return;
+                    }
+
+                    // Single character deletion
+                    if (selStart > compStart) {
+                        e.preventDefault();
+                        // Delete the character before caret
+                        replaceRange(selStart - 1, selStart, '');
+
+                        // Check if composition is now empty
+                        const compText = editor.value.substring(compStart, selStart - 1);
+                        if (compText.length === 0) {
+                            compStart = null;
+                        }
+                        updateIndicator();
+                        return;
+                    } else if (selStart === compStart) {
+                        // At start of composition, end composition
+                        e.preventDefault();
+                        commitComposition();
+                        return;
+                    }
+                }
+                // Otherwise let Backspace through
+                return;
+            }
+
+            // Handle navigation keys that move caret (commit first)
+            const navKeys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown'];
+            if (navKeys.includes(key)) {
+                if (compStart !== null) {
+                    commitComposition();
+                }
+                return;
+            }
+
+            // Handle letters A-Z
+            if (key.length === 1 && key !== 'v' && key !== 'V' &&
+                ((key >= 'a' && key <= 'z') || (key >= 'A' && key <= 'Z'))) {
+                const selStart = editor.selectionStart;
+                const selEnd = editor.selectionEnd;
+
+                // Delete selection if any, then insert character
+                replaceRange(selStart, selEnd, key);
+
+                // Start composition if not already composing
+                if (compStart === null) {
+                    compStart = selStart;
+                } else {
+                    shiftCompositionIfFull();
+                }
+
+                updateIndicator();
+                e.preventDefault();
+                return;
+            }
+
+            // Handle tone digits 1-4
+            if (compStart !== null && key >= '1' && key <= '4') {
+                e.preventDefault();
+
+                const selStart = editor.selectionStart;
+                const selEnd = editor.selectionEnd;
+
+                // Get composition text
+                let text = getCompositionText();
+
+                // Apply tone
+                const tone = parseInt(key, 10);
+                text = setTone(text, tone);
+
+                // Replace composition with toned version and position cursor at end
+                replaceRange(compStart, selEnd, text);
+
+                // Commit after tone
+                commitComposition();
+                return;
+            }
+
+            // Handle other digits (0, 5-9) - swallow while composing
+            if (compStart !== null && key >= '0' && key <= '9') {
+                e.preventDefault();
+                // Do nothing, just swallow the digit
+                return;
+            }
+
+            // Handle v character
+            if (key === 'v' || key === 'V') {
+                const selStart = editor.selectionStart;
+                const selEnd = editor.selectionEnd;
+
+                if (compStart === null) {
+                    compStart = selStart;
+                }
+
+                // Delete selection if any
+                if (selStart !== selEnd) {
+                    replaceRange(selStart, selEnd, '');
+                }
+
+                // Get current composition text
+                let text = getCompositionText();
+
+                // Handle v character
+                const result = handleVCharacter(text, key === 'V');
+
+                // Replace composition with result and position cursor at end
+                replaceRange(compStart, compStart + text.length, result);
+
+                // If result ends with a literal v (double-v case), commit
+                if (/[vV]$/.test(result)) {
+                    commitComposition();
+                } else {
+                    updateIndicator();
+                }
+
+                e.preventDefault();
+                return;
+            }
+
+            // Handle other printable characters while composing
+            if (compStart !== null && key.length === 1 && !key.startsWith('F')) {
+                // Commit first, then let character through
+                commitComposition();
+            }
+        }
+
+        // Insert pasted text using the same composition rules as typed characters.
+        function insertPastedText(text) {
+            commitComposition();
+
+            const selStart = editor.selectionStart;
+            const selEnd = editor.selectionEnd;
+            replaceRange(selStart, selEnd, '');
+
+            for (const key of text.replace(/\r\n?/g, '\n')) {
+                if (key.length === 1 && key !== 'v' && key !== 'V' &&
+                    ((key >= 'a' && key <= 'z') || (key >= 'A' && key <= 'Z'))) {
+                    const start = editor.selectionStart;
+                    replaceRange(start, editor.selectionEnd, key);
+                    if (compStart === null) {
+                        compStart = start;
+                    } else {
+                        shiftCompositionIfFull();
+                    }
+                    updateIndicator();
+                } else if (compStart !== null && key >= '1' && key <= '4') {
+                    const textToTone = setTone(getCompositionText(), Number(key));
+                    replaceRange(compStart, editor.selectionEnd, textToTone);
+                    commitComposition();
+                } else if (compStart !== null && key >= '0' && key <= '9') {
+                    // Match typed input: ignore unsupported digits during composition.
+                } else if (key === 'v' || key === 'V') {
+                    const start = editor.selectionStart;
+                    if (compStart === null) {
+                        compStart = start;
+                    }
+                    const composition = getCompositionText();
+                    const replacement = handleVCharacter(composition, key === 'V');
+                    replaceRange(compStart, compStart + composition.length, replacement);
+                    if (/[vV]$/.test(replacement)) {
+                        commitComposition();
+                    } else {
+                        updateIndicator();
+                    }
+                } else {
+                    commitComposition();
+                    const start = editor.selectionStart;
+                    replaceRange(start, editor.selectionEnd, key);
+                }
+            }
+
+            commitComposition();
+        }
+
+        function handlePaste(e) {
+            const text = e.clipboardData && e.clipboardData.getData('text/plain');
+            if (text === undefined || text === null) {
+                return;
+            }
+
+            e.preventDefault();
+            insertPastedText(text);
+        }
+
+        // Handle selection changes (clicks, caret moves)
+        function handleSelectionChange() {
+            if (compStart !== null) {
+                const selStart = editor.selectionStart;
+                const selEnd = editor.selectionEnd;
+
+                // If caret is outside composition, commit
+                if (selStart < compStart || selEnd < compStart ||
+                    selStart > editor.value.length || selEnd > editor.value.length) {
+                    commitComposition();
+                }
+            }
+        }
+
+        // Handle mouse events (commit composition)
+        function handleMouseInteraction() {
+            if (compStart !== null) {
+                commitComposition();
+            }
+        }
+
+        // Copy button
+        document.getElementById('copy-btn').addEventListener('click', function() {
+            navigator.clipboard.writeText(editor.value).then(function() {
+                const btn = document.getElementById('copy-btn');
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(function() {
+                    btn.textContent = originalText;
+                }, 1500);
+            }).catch(function(err) {
+                console.error('Copy failed:', err);
+            });
+        });
+
+        // Clear button
+        document.getElementById('clear-btn').addEventListener('click', function() {
+            editor.value = '';
+            compStart = null;
+            updateIndicator();
+        });
+
+        validationToggle.addEventListener('click', function() {
+            setPinyinValidation(!pinyinValidationEnabled);
+        });
+
+        // Self-test function
+        window.runSelfTests = function() {
+            console.log('=== Pinyin Typing Self-Tests ===');
+            let passed = 0;
+            let failed = 0;
+
+            function test(desc, fn) {
+                try {
+                    fn();
+                    console.log('✓ ' + desc);
+                    passed++;
+                } catch (e) {
+                    console.error('✗ ' + desc + ': ' + e.message);
+                    failed++;
+                }
+            }
+
+            function assertEq(actual, expected, msg) {
+                if (actual !== expected) {
+                    throw new Error(msg + ': expected "' + expected + '", got "' + actual + '"');
+                }
+            }
+
+            // Basic tone application
+            test('ni3 → nǐ', function() {
+                assertEq(setTone('ni', 3), 'nǐ');
+            });
+            test('zhong1 → zhōng', function() {
+                assertEq(setTone('zhong', 1), 'zhōng');
+            });
+            test('hao3 → hǎo', function() {
+                assertEq(setTone('hao', 3), 'hǎo');
+            });
+            test('jiu4 → jiù', function() {
+                assertEq(setTone('jiu', 4), 'jiù');
+            });
+            test('gui4 → guì', function() {
+                assertEq(setTone('gui', 4), 'guì');
+            });
+            test('ou1 → ōu', function() {
+                assertEq(setTone('ou', 1), 'ōu');
+            });
+            test('lü4 → lǜ', function() {
+                assertEq(setTone('lü', 4), 'lǜ');
+            });
+            test('Wo3 → Wǒ', function() {
+                assertEq(setTone('Wo', 3), 'Wǒ');
+            });
+            test('Ü1 → Ǖ', function() {
+                assertEq(setTone('Ü', 1), 'Ǖ');
+            });
+
+            // Double-v escape
+            test('vv → v', function() {
+                let result = handleVCharacter('');  // First v adds ü
+                result = handleVCharacter(result);  // Second v replaces with v
+                assertEq(result, 'v');
+            });
+
+            // Case of typed v decides ü vs Ü
+            test('v after N keeps ü lowercase', function() {
+                assertEq(handleVCharacter('N', false), 'Nü');
+            });
+            test('V types Ü', function() {
+                assertEq(handleVCharacter('', true), 'Ü');
+            });
+            test('Paste Nv3 shi4 → Nǚ shì', function() {
+                editor.value = '';
+                editor.setSelectionRange(0, 0);
+                compStart = null;
+                insertPastedText('Nv3 shi4');
+                assertEq(editor.value, 'Nǚ shì');
+            });
+
+            test('Suggests you for a bare iou', function() {
+                const ranges = getInvalidPinyinRanges('iou');
+                assertEq(ranges[0].diagnostic.rule.id, 'zero-onset-spelling');
+                assertEq(ranges[0].diagnostic.suggestion, 'you');
+            });
+
+            test('Suggests wei for a bare ui', function() {
+                const ranges = getInvalidPinyinRanges('ui');
+                assertEq(ranges[0].diagnostic.rule.id, 'zero-onset-spelling');
+                assertEq(ranges[0].diagnostic.suggestion, 'wei');
+            });
+
+            test('Keeps the tone mark in a zero-onset suggestion', function() {
+                const ranges = getInvalidPinyinRanges('iǒu');
+                assertEq(ranges[0].diagnostic.rule.id, 'zero-onset-spelling');
+                assertEq(ranges[0].diagnostic.suggestion, 'yǒu');
+            });
+
+            test('Keeps the tone mark in an abbreviated-final suggestion', function() {
+                const ranges = getInvalidPinyinRanges('diōu');
+                assertEq(ranges[0].diagnostic.rule.id, 'abbreviated-final-spelling');
+                assertEq(ranges[0].diagnostic.suggestion, 'diū');
+            });
+
+            test('Keeps the tone mark in an umlaut suggestion', function() {
+                const ranges = getInvalidPinyinRanges('jǘn');
+                assertEq(ranges[0].diagnostic.rule.id, 'umlaut-spelling-after-palatal');
+                assertEq(ranges[0].diagnostic.suggestion, 'jún');
+            });
+
+            test('Paste converts tone numbers', function() {
+                editor.value = '';
+                editor.setSelectionRange(0, 0);
+                compStart = null;
+                insertPastedText('Ni3 hao3! Wo3 jiao4 Li3.');
+                assertEq(editor.value, 'Nǐ hǎo! Wǒ jiào Lǐ.');
+            });
+
+            test('Validates standard tone-marked Pinyin', function() {
+                assertEq(JSON.stringify(getInvalidPinyinRanges('Nǐ hǎo, lǜsè!')), '[]');
+            });
+            test('Loads a complete cited rules manifest', function() {
+                assertEq(pinyinRules.version, 1);
+                assertEq(PINYIN_SYLLABLES.has('nü'), true);
+                assertEq(pinyinRules.rules.every(rule => rule.sources.length > 0), true);
+            });
+            test('Validates Pinyin written with tone numbers', function() {
+                assertEq(JSON.stringify(getInvalidPinyinRanges('ni3 hao3')), '[]');
+            });
+            test('Validates r- initial syllables', function() {
+                assertEq(JSON.stringify(getInvalidPinyinRanges('rén rì Rìběn ruò rou')), '[]');
+            });
+            test('Auto-segments adjacent syllables', function() {
+                assertEq(JSON.stringify(getInvalidPinyinRanges('nǐhǎo zhongguo')), '[]');
+            });
+            test('Marks impossible Pinyin combinations', function() {
+                const ranges = getInvalidPinyinRanges('nǐ bng hǎo');
+                assertEq(JSON.stringify(ranges.map(range => ({ start: range.start, end: range.end }))), '[{"start":3,"end":6}]');
+                assertEq(ranges[0].diagnostic.rule.id, 'labial-final-mismatch');
+            });
+            test('Explains a palatal-final mismatch', function() {
+                const ranges = getInvalidPinyinRanges('jo');
+                assertEq(JSON.stringify(ranges.map(range => ({ start: range.start, end: range.end }))), '[{"start":0,"end":2}]');
+                assertEq(ranges[0].diagnostic.rule.id, 'palatal-final-mismatch');
+                assertEq(ranges[0].diagnostic.rule.sources.includes('mandarin-sounds-compatibility'), true);
+            });
+            test('Explains a misplaced tone mark', function() {
+                const ranges = getInvalidPinyinRanges('nǐu');
+                assertEq(ranges[0].diagnostic.rule.id, 'tone-mark-placement');
+                assertEq(ranges[0].diagnostic.suggestion, 'niǔ');
+            });
+            test('Explains abbreviated finals', function() {
+                const ranges = getInvalidPinyinRanges('diou');
+                assertEq(ranges[0].diagnostic.rule.id, 'abbreviated-final-spelling');
+                assertEq(ranges[0].diagnostic.suggestion, 'diu');
+            });
+            test('Explains umlaut spelling after a palatal initial', function() {
+                const ranges = getInvalidPinyinRanges('jü');
+                assertEq(ranges[0].diagnostic.rule.id, 'umlaut-spelling-after-palatal');
+                assertEq(ranges[0].diagnostic.suggestion, 'ju');
+            });
+            test('Suggests y or w for a zero-initial spelling', function() {
+                const ranges = getInvalidPinyinRanges('ie');
+                assertEq(ranges[0].diagnostic.rule.id, 'zero-onset-spelling');
+                assertEq(ranges[0].diagnostic.suggestion, 'ye');
+            });
+            test('Does not mark an active composition', function() {
+                editor.value = 'bng';
+                editor.setSelectionRange(3, 3);
+                compStart = 0;
+                assertEq(JSON.stringify(getInvalidPinyinRanges(editor.value)), '[]');
+                compStart = null;
+            });
+            test('Can disable Pinyin validation', function() {
+                assertEq(validationToggle.getAttribute('aria-pressed'), 'true');
+                setPinyinValidation(false);
+                assertEq(JSON.stringify(getInvalidPinyinRanges('bng')), '[]');
+                assertEq(validationToggle.textContent, 'Check Pinyin: Off');
+                setPinyinValidation(true);
+                assertEq(validationToggle.textContent, 'Check Pinyin: On');
+            });
+            test('Renders an underline for invalid Pinyin', function() {
+                editor.value = 'bng';
+                renderValidation();
+                assertEq(highlights.querySelector('.invalid-pinyin').textContent, 'bng');
+            });
+            test('Renders bilingual diagnostic content and sources', function() {
+                editor.value = 'jo';
+                renderValidation();
+                showDiagnostic(highlights.querySelector('.invalid-pinyin'), true);
+                assertEq(diagnosticCard.textContent.includes('Palatal-final mismatch'), true);
+                assertEq(diagnosticCard.textContent.includes('舌面音与韵母拼合不合规'), true);
+                assertEq(diagnosticCard.querySelectorAll('a').length >= 2, true);
+                hideDiagnostic();
+            });
+
+            // No vowel in syllable (m, ng, etc.)
+            test('m2 → m', function() {
+                assertEq(setTone('m', 2), 'm');
+            });
+
+            // Example sentence
+            test('Example: Ni3 hao3! Wo3 jiao4 Li3.', function() {
+                let result = '';
+                result += setTone('Ni', 3) + ' ';
+                result += setTone('hao', 3) + '! ';
+                result += setTone('Wo', 3) + ' ';
+                result += setTone('jiao', 4) + ' ';
+                result += setTone('Li', 3) + '.';
+                assertEq(result, 'Nǐ hǎo! Wǒ jiào Lǐ.');
+            });
+
+            // Vowel table verification
+            test('Vowel table: a row', function() {
+                assertEq(chr(VOWELS[0]), 'a');
+                assertEq(chr(VOWELS[1]), 'ā');
+                assertEq(chr(VOWELS[2]), 'á');
+                assertEq(chr(VOWELS[3]), 'ǎ');
+                assertEq(chr(VOWELS[4]), 'à');
+            });
+            test('Vowel table: ü row', function() {
+                assertEq(chr(VOWELS[25]), 'ü');
+                assertEq(chr(VOWELS[26]), 'ǖ');
+                assertEq(chr(VOWELS[27]), 'ǘ');
+                assertEq(chr(VOWELS[28]), 'ǚ');
+                assertEq(chr(VOWELS[29]), 'ǜ');
+            });
+            test('Vowel table: A row (uppercase)', function() {
+                assertEq(chr(VOWELS[30]), 'A');
+                assertEq(chr(VOWELS[31]), 'Ā');
+                assertEq(chr(VOWELS[32]), 'Á');
+                assertEq(chr(VOWELS[33]), 'Ǎ');
+                assertEq(chr(VOWELS[34]), 'À');
+            });
+
+            // Special cases from tone placement rules
+            test('Tone on a in "ia"', function() {
+                assertEq(setTone('ia', 3), 'iǎ');
+            });
+            test('Tone on a in "ua"', function() {
+                assertEq(setTone('ua', 2), 'uá');
+            });
+            test('Tone on e in "ie"', function() {
+                assertEq(setTone('ie', 4), 'iè');
+            });
+            test('Tone on o in "ou"', function() {
+                assertEq(setTone('ou', 1), 'ōu');
+            });
+
+            // Retone after tone change
+            test('Retone: ni3 → ni4', function() {
+                assertEq(setTone(setTone('ni', 3), 4), 'nì');
+            });
+
+            console.log('=== Test Results: ' + passed + ' passed, ' + failed + ' failed ===');
+            return { passed, failed };
+        };
+
+        // Event listeners
+        editor.addEventListener('keydown', handleKeyDown);
+        editor.addEventListener('input', scheduleValidation);
+        editor.addEventListener('paste', handlePaste);
+        editor.addEventListener('scroll', syncValidationScroll);
+        editor.addEventListener('mousedown', handleMouseInteraction);
+        document.addEventListener('selectionchange', handleSelectionChange);
+
+        highlights.addEventListener('pointerover', function(event) {
+            const target = event.target.closest('.pinyin-diagnostic');
+            if (target && !pinnedDiagnostic) {
+                showDiagnostic(target);
+            }
+        });
+        highlights.addEventListener('pointerout', function(event) {
+            if (event.target.closest('.pinyin-diagnostic') && !pinnedDiagnostic) {
+                scheduleDiagnosticHide();
+            }
+        });
+        highlights.addEventListener('pointerdown', function(event) {
+            const target = event.target.closest('.pinyin-diagnostic');
+            if (target) {
+                event.preventDefault();
+                editor.focus();
+                editor.setSelectionRange(Number(target.dataset.end), Number(target.dataset.end));
+            }
+        });
+        highlights.addEventListener('click', function(event) {
+            const target = event.target.closest('.pinyin-diagnostic');
+            if (!target) {
+                return;
+            }
+            if (pinnedDiagnostic === target) {
+                hideDiagnostic();
+            } else {
+                showDiagnostic(target, true);
+            }
+        });
+        diagnosticCard.addEventListener('pointerenter', () => clearTimeout(tooltipHideTimer));
+        diagnosticCard.addEventListener('pointerleave', () => {
+            if (!pinnedDiagnostic) {
+                scheduleDiagnosticHide();
+            }
+        });
+        document.addEventListener('pointerdown', function(event) {
+            if (pinnedDiagnostic && !diagnosticCard.contains(event.target) &&
+                !event.target.closest('.pinyin-diagnostic')) {
+                hideDiagnostic();
+            }
+        });
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && pinnedDiagnostic) {
+                hideDiagnostic();
+            }
+        });
+
+        renderValidation();
+        loadPinyinRules().then(() => {
+            if (new URLSearchParams(window.location.search).has('test')) {
+                const summary = window.runSelfTests();
+                document.documentElement.dataset.testResult = `${summary.passed}:${summary.failed}`;
+            }
+        }).catch(() => {
+            if (new URLSearchParams(window.location.search).has('test')) {
+                document.documentElement.dataset.testResult = '0:1';
+            }
+        });
+
+    })();
+    </script>
+</body>
+</html>

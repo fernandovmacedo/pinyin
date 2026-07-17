@@ -1,0 +1,233 @@
+{
+  "version": 1,
+  "documentation": {
+    "en": "This manifest is the editor's single source of truth for valid syllables and teaching diagnostics. Explanations are original summaries derived from the cited sources; they are not copied source text.",
+    "zh": "此清单是编辑器中有效音节与教学诊断的唯一来源。说明文字是根据所列来源撰写的原创摘要，并非复制原文。"
+  },
+  "sources": [
+    {
+      "id": "hanyu-pinyin-scheme",
+      "title": {
+        "en": "Hanyu Pinyin Scheme (1958)",
+        "zh": "汉语拼音方案（1958）"
+      },
+      "url": "sources/hanyu-pinyin-scheme-1958.md",
+      "note": {
+        "en": "The official spelling scheme for Standard Mandarin.",
+        "zh": "普通话拼写的官方方案。"
+      }
+    },
+    {
+      "id": "iso-7098",
+      "title": {
+        "en": "ISO 7098: Chinese Romanization",
+        "zh": "ISO 7098：中文罗马字母拼写法"
+      },
+      "url": "https://edu.sh.gov.cn/yywz_gfbz_gyhypy/20150705/0015-yywz_1998.html",
+      "note": {
+        "en": "Applies the Hanyu Pinyin Scheme to Standard Mandarin and refers to the initial-final combination table. Linked externally; the standard's text is not redistributed here.",
+        "zh": "将汉语拼音方案用于普通话，并引用声韵拼合表。仅提供外部链接，本仓库不转载标准原文。"
+      }
+    },
+    {
+      "id": "ut-austin-pitch-perfect-pinyin",
+      "title": {
+        "en": "UT Austin: Pitch Perfect Pinyin — j, q, x",
+        "zh": "得州大学奥斯汀分校：《完美拼音》——j、q、x"
+      },
+      "url": "sources/ut-austin-pitch-perfect-pinyin-unit-4.md",
+      "note": {
+        "en": "University pronunciation instruction for the j/q/x group and the rounded lips used with ü.",
+        "zh": "大学发音教材，讲解 j/q/x 组及其与 ü 相拼时的圆唇发音。"
+      },
+      "license": "CC BY-NC-SA 3.0"
+    },
+    {
+      "id": "ut-austin-pinyin-rules",
+      "title": {
+        "en": "UT Austin: Pitch Perfect Pinyin — Pinyin Rules",
+        "zh": "得州大学奥斯汀分校：《完美拼音》——拼音规则"
+      },
+      "url": "sources/ut-austin-pitch-perfect-pinyin-rules.md",
+      "note": {
+        "en": "University lesson covering tone placement, abbreviated finals, umlaut spelling, and word-boundary conventions.",
+        "zh": "大学课程，讲解标调、韵母简写、ü 的拼写及词界规则。"
+      },
+      "license": "CC BY-NC-SA 3.0"
+    },
+    {
+      "id": "mandarin-sounds-compatibility",
+      "title": {
+        "en": "Mastering Mandarin Sounds",
+        "zh": "《掌握普通话语音》"
+      },
+      "url": "sources/Mastering-Mandarin-Sounds.md#syllable-structure-ii-vowels-and-finals",
+      "note": {
+        "en": "University of Iowa open textbook. Chapter 8 explains initial-final constraints; the appendix supplies the compatibility chart.",
+        "zh": "爱荷华大学开放教材。第 8 章讲解声韵拼合限制，附录提供兼容性图表。"
+      },
+      "license": "CC BY-NC 4.0; cited for independently written summaries."
+    }
+  ],
+  "syllables": [
+    "a", "ai", "an", "ang", "ao",
+    "ba", "bai", "ban", "bang", "bao", "bei", "ben", "beng", "bi", "bian", "biao", "bie", "bin", "bing", "bo", "bu",
+    "pa", "pai", "pan", "pang", "pao", "pei", "pen", "peng", "pi", "pian", "piao", "pie", "pin", "ping", "po", "pou", "pu",
+    "ma", "mai", "man", "mang", "mao", "me", "mei", "men", "meng", "mi", "mian", "miao", "mie", "min", "ming", "miu", "mo", "mou", "mu",
+    "fa", "fan", "fang", "fei", "fen", "feng", "fo", "fou", "fu",
+    "da", "dai", "dan", "dang", "dao", "de", "dei", "den", "deng", "di", "dia", "dian", "diao", "die", "ding", "diu", "dong", "dou", "du", "duan", "dui", "dun", "duo",
+    "ta", "tai", "tan", "tang", "tao", "te", "teng", "ti", "tian", "tiao", "tie", "ting", "tong", "tou", "tu", "tuan", "tui", "tun", "tuo",
+    "na", "nai", "nan", "nang", "nao", "ne", "nei", "nen", "neng", "ni", "nian", "niang", "niao", "nie", "nin", "ning", "niu", "nong", "nou", "nu", "nü", "nuan", "nüe", "nuo",
+    "la", "lai", "lan", "lang", "lao", "le", "lei", "leng", "li", "lia", "lian", "liang", "liao", "lie", "lin", "ling", "liu", "lo", "long", "lou", "lu", "lü", "luan", "lüe", "lun", "luo",
+    "ga", "gai", "gan", "gang", "gao", "ge", "gei", "gen", "geng", "gong", "gou", "gu", "gua", "guai", "guan", "guang", "gui", "gun", "guo",
+    "ka", "kai", "kan", "kang", "kao", "ke", "kei", "ken", "keng", "kong", "kou", "ku", "kua", "kuai", "kuan", "kuang", "kui", "kun", "kuo",
+    "ha", "hai", "han", "hang", "hao", "he", "hei", "hen", "heng", "hong", "hou", "hu", "hua", "huai", "huan", "huang", "hui", "hun", "huo",
+    "ji", "jia", "jian", "jiang", "jiao", "jie", "jin", "jing", "jiong", "jiu", "ju", "juan", "jue", "jun",
+    "qi", "qia", "qian", "qiang", "qiao", "qie", "qin", "qing", "qiong", "qiu", "qu", "quan", "que", "qun",
+    "xi", "xia", "xian", "xiang", "xiao", "xie", "xin", "xing", "xiong", "xiu", "xu", "xuan", "xue", "xun",
+    "zha", "zhai", "zhan", "zhang", "zhao", "zhe", "zhei", "zhen", "zheng", "zhi", "zhong", "zhou", "zhu", "zhua", "zhuai", "zhuan", "zhuang", "zhui", "zhun", "zhuo",
+    "cha", "chai", "chan", "chang", "chao", "che", "chen", "cheng", "chi", "chong", "chou", "chu", "chua", "chuai", "chuan", "chuang", "chui", "chun", "chuo",
+    "sha", "shai", "shan", "shang", "shao", "she", "shei", "shen", "sheng", "shi", "shou", "shu", "shua", "shuai", "shuan", "shuang", "shui", "shun", "shuo",
+    "re", "ran", "rang", "rao", "ren", "reng", "ri", "rong", "rou", "ru", "rua", "ruan", "rui", "run", "ruo",
+    "za", "zai", "zan", "zang", "zao", "ze", "zei", "zen", "zeng", "zi", "zong", "zou", "zu", "zuan", "zui", "zun", "zuo",
+    "ca", "cai", "can", "cang", "cao", "ce", "cei", "cen", "ceng", "ci", "cong", "cou", "cu", "cuan", "cui", "cun", "cuo",
+    "sa", "sai", "san", "sang", "sao", "se", "sen", "seng", "si", "song", "sou", "su", "suan", "sui", "sun", "suo",
+    "ya", "yan", "yang", "yao", "ye", "yi", "yin", "ying", "yo", "yong", "you", "yu", "yuan", "yue", "yun",
+    "wa", "wai", "wan", "wang", "wei", "wen", "weng", "wo", "wu",
+    "e", "ei", "en", "eng", "er", "o", "ou"
+  ],
+  "rules": [
+    {
+      "id": "palatal-final-mismatch",
+      "initials": ["j", "q", "x"],
+      "title": { "en": "Palatal-final mismatch", "zh": "舌面音与韵母拼合不合规" },
+      "explanation": {
+        "en": "{{initial}} does not combine with the final {{final}} in Standard Mandarin Pinyin. j, q, and x are restricted to i- and ü-based finals. After these initials, the ü spelling is written u, but it still represents the rounded ü sound.",
+        "zh": "在普通话拼音中，{{initial}} 不能与韵母 {{final}} 拼合。j、q、x 只与 i、ü 系韵母拼合；ü 在这些声母后写作 u，但仍表示圆唇的 ü 音。"
+      },
+      "examples": ["jo", "qa", "xe", "ju", "qu", "xue"],
+      "sources": ["hanyu-pinyin-scheme", "ut-austin-pitch-perfect-pinyin", "ut-austin-pinyin-rules", "mandarin-sounds-compatibility"]
+    },
+    {
+      "id": "retroflex-final-mismatch",
+      "initials": ["zh", "ch", "sh", "r"],
+      "title": { "en": "Retroflex-final mismatch", "zh": "翘舌音与韵母拼合不合规" },
+      "explanation": {
+        "en": "{{initial}} does not combine with the final {{final}} in the Standard Mandarin initial-final table. The i in zhi, chi, shi, and ri is a special apical vowel, not the ordinary i- series.",
+        "zh": "在普通话声韵拼合表中，{{initial}} 不能与韵母 {{final}} 拼合。zhi、chi、shi、ri 中的 i 是特殊的舌尖元音，并非普通的 i 系韵母。"
+      },
+      "examples": ["zhie", "chü", "shia", "riang"],
+      "sources": ["hanyu-pinyin-scheme", "iso-7098", "mandarin-sounds-compatibility"]
+    },
+    {
+      "id": "dental-sibilant-final-mismatch",
+      "initials": ["z", "c", "s"],
+      "title": { "en": "Dental-sibilant final mismatch", "zh": "舌尖前音与韵母拼合不合规" },
+      "explanation": {
+        "en": "{{initial}} does not combine with the final {{final}} in the Standard Mandarin initial-final table. z, c, and s use a special apical vowel in zi, ci, and si; they do not take the ordinary i- or ü-based series.",
+        "zh": "在普通话声韵拼合表中，{{initial}} 不能与韵母 {{final}} 拼合。zi、ci、si 中的 i 是特殊的舌尖元音；z、c、s 不与普通的 i、ü 系韵母相拼。"
+      },
+      "examples": ["zie", "cü", "sia"],
+      "sources": ["hanyu-pinyin-scheme", "iso-7098", "mandarin-sounds-compatibility"]
+    },
+    {
+      "id": "labial-final-mismatch",
+      "initials": ["b", "p", "m", "f"],
+      "title": { "en": "Labial-final mismatch", "zh": "唇音与韵母拼合不合规" },
+      "explanation": {
+        "en": "{{initial}} does not combine with the final {{final}} in the Standard Mandarin initial-final table. In particular, write bo, po, and mo—not buo, puo, or muo—even though their vowel sound includes u.",
+        "zh": "在普通话声韵拼合表中，{{initial}} 不能与韵母 {{final}} 拼合。特别是应写 bo、po、mo，而不是 buo、puo、muo；虽然它们的元音听感包含 u。"
+      },
+      "examples": ["bü", "püe", "fian"],
+      "sources": ["hanyu-pinyin-scheme", "iso-7098"]
+    },
+    {
+      "id": "alveolar-final-mismatch",
+      "initials": ["d", "t", "n", "l"],
+      "title": { "en": "Alveolar-final mismatch", "zh": "舌尖中音与韵母拼合不合规" },
+      "explanation": {
+        "en": "{{initial}} does not combine with the final {{final}} in the Standard Mandarin initial-final table. Check the permitted syllables for {{initial}}.",
+        "zh": "在普通话声韵拼合表中，{{initial}} 不能与韵母 {{final}} 拼合。请查对 {{initial}} 允许的音节。"
+      },
+      "examples": ["düe", "tü", "nia", "lüng"],
+      "sources": ["hanyu-pinyin-scheme", "iso-7098"]
+    },
+    {
+      "id": "velar-final-mismatch",
+      "initials": ["g", "k", "h"],
+      "title": { "en": "Velar-final mismatch", "zh": "舌根音与韵母拼合不合规" },
+      "explanation": {
+        "en": "{{initial}} does not combine with the final {{final}} in the Standard Mandarin initial-final table. Check the permitted syllables for {{initial}}.",
+        "zh": "在普通话声韵拼合表中，{{initial}} 不能与韵母 {{final}} 拼合。请查对 {{initial}} 允许的音节。"
+      },
+      "examples": ["gia", "kü", "hie"],
+      "sources": ["hanyu-pinyin-scheme", "iso-7098"]
+    },
+    {
+      "id": "zero-onset-mismatch",
+      "initials": ["y", "w"],
+      "title": { "en": "Zero-initial spelling mismatch", "zh": "零声母拼写不合规" },
+      "explanation": {
+        "en": "{{initial}} does not combine with the final {{final}} in Standard Mandarin spelling. y and w spell syllables that begin without a separate consonant initial.",
+        "zh": "在普通话拼写中，{{initial}} 不能与韵母 {{final}} 拼合。y、w 用来拼写没有单独声母的音节。"
+      },
+      "examples": ["yiang", "wie", "wü"],
+      "sources": ["hanyu-pinyin-scheme", "iso-7098"]
+    },
+    {
+      "id": "tone-mark-placement",
+      "initials": [],
+      "title": { "en": "Tone mark on the wrong vowel", "zh": "声调标在错误的元音上" },
+      "explanation": {
+        "en": "{{syllable}} is a valid syllable, but its tone mark belongs on a different vowel. Write {{suggestion}}.",
+        "zh": "{{syllable}} 是有效音节，但声调应标在另一个元音上。请写作 {{suggestion}}。"
+      },
+      "examples": ["niú", "guì", "xiǎo"],
+      "sources": ["hanyu-pinyin-scheme", "ut-austin-pinyin-rules"]
+    },
+    {
+      "id": "zero-onset-spelling",
+      "initials": [],
+      "title": { "en": "Zero-initial spelling", "zh": "零声母拼写" },
+      "explanation": {
+        "en": "A syllable beginning without a consonant uses y or w in Pinyin. Write {{suggestion}} instead of {{syllable}}.",
+        "zh": "没有声母的音节在拼音中使用 y 或 w。请将 {{syllable}} 写作 {{suggestion}}。"
+      },
+      "examples": ["yi", "wo", "yue"],
+      "sources": ["hanyu-pinyin-scheme", "ut-austin-pinyin-rules"]
+    },
+    {
+      "id": "abbreviated-final-spelling",
+      "initials": [],
+      "title": { "en": "Abbreviated final spelling", "zh": "韵母简写" },
+      "explanation": {
+        "en": "After an initial, {{syllable}} uses a standard abbreviated final. Write {{suggestion}} instead.",
+        "zh": "声母后，{{syllable}} 的韵母应使用标准简写。请写作 {{suggestion}}。"
+      },
+      "examples": ["diu", "gui", "dun"],
+      "sources": ["hanyu-pinyin-scheme", "ut-austin-pinyin-rules"]
+    },
+    {
+      "id": "umlaut-spelling-after-palatal",
+      "initials": [],
+      "title": { "en": "ü spelling after j, q, or x", "zh": "j、q、x 后 ü 的拼写" },
+      "explanation": {
+        "en": "After j, q, or x, {{syllable}} omits the dots from ü in spelling. Write {{suggestion}}; the vowel is still pronounced ü.",
+        "zh": "在 j、q、x 后，{{syllable}} 中的 ü 在拼写时省去两点。请写作 {{suggestion}}；实际读音仍是 ü。"
+      },
+      "examples": ["ju", "qun", "xuan"],
+      "sources": ["hanyu-pinyin-scheme", "ut-austin-pinyin-rules"]
+    },
+    {
+      "id": "initial-final-table-mismatch",
+      "initials": [],
+      "title": { "en": "Initial-final table mismatch", "zh": "声韵拼合表不匹配" },
+      "explanation": {
+        "en": "{{syllable}} is not listed as a Standard Mandarin initial-final combination. Check the official combination table and split adjacent syllables if needed.",
+        "zh": "{{syllable}} 不在普通话声韵拼合表中。请查对官方拼合表；如有多个音节，请在需要处划分音节。"
+      },
+      "examples": ["bng", "ae", "mn"],
+      "sources": ["hanyu-pinyin-scheme", "iso-7098"]
+    }
+  ]
+}

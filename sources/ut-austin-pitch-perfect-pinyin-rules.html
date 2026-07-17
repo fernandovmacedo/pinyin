@@ -1,0 +1,160 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Pitch Perfect Pinyin</title>
+<link href="master.css" rel="stylesheet" type="text/css"/>
+
+<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<script type="text/javascript" src="soundmanager2/script/soundmanager2.js"></script>
+<script type="text/javascript" src="soundmanager2/script/sound.js"></script>
+<script type="text/javascript" src="scripts/showhide.js"></script>
+</head>
+
+<body id="learning">
+<div id="wrapper">
+
+    <div id="branding">
+        <a id="ut-branding" href="http://www.utexas.edu" target="_blank"><img src="images/branding-ut.gif" alt="University of Texas" border="0" /></a>
+        <a id="cola-branding" href="http://www.utexas.edu/cola/" target="_blank"><img src="images/branding-cola.gif" alt="Collage of Liberal Arts" border="0" /></a>
+    </div><!--/branding-->
+	
+    <div id="container">
+    
+    	<div id="header">    
+            <a id="title" href="/ppp"><h1>Pitch Perfect Pinyin</h1></a>
+            <h2>Advanced Interactive Listening Comprehension Practice</h2>
+        </div>
+        <ul id="learning-menu">
+            <li><a id="mi0" href="learning.php?unit=0"><span>0</span></a></li>
+        	<li><a id="mi1" href="learning.php?unit=1"><span>1</span></a></li>
+            <li><a id="mi2" href="learning.php?unit=2"><span>2</span></a></li>
+            <li><a id="mi3" href="learning.php?unit=3"><span>3</span></a></li>
+            <li><a id="mi4" href="learning.php?unit=4"><span>4</span></a></li>
+            <li><a id="mi5" href="learning.php?unit=5"><span>5</span></a></li>
+            <li><a id="mi6" href="learning.php?unit=6"><span>6</span></a></li>
+            <li><a id="mi7" href="learning.php?unit=7"><span>7</span></a></li>
+            <li><a id="mi8" href="learning.php?unit=8"><span>8</span></a></li>
+            <li><a id="mi9" href="learning.php?unit=9"><span>9</span></a></li>
+            <li><a id="mi10" href="learning.php?unit=10"><span>10</span></a></li>
+            <li><a id="mi11" href="learning.php?unit=11"><span>11</span></a></li>
+            <li><a id="mi12" href="learning.php?unit=12"><span>12</span></a></li>
+        </ul>
+        
+        <h3>Learning: Basic Information</h3>
+
+	<h4><em>Basic Information about Pinyin</em></h4>
+	<div id="tips" class="learning-intro">
+        <div id="initials"><h5></h5>
+            <a class="trigger_link syl" href="syl-1">Chinese Syllables</a>
+        </div>
+            <div id="syl_box"></div>
+            <div class="hidden_content" id="syl-1">
+            <p>Each Chinese character is represented by a syllable and an accompanying tone; some characters may have more than one way to pronounce them.</p>
+			<p>A syllable consists of</p>
+			<blockquote><p>a. an initial + a final</p>
+			<p>b. a final without an initial</p></blockquote>
+			<p>An initial is a consonant.</p>
+			<p>A final can be</p>
+			<blockquote><p>a. a simple vowel, e.g. <em>a, e, i, o, u</em>;</p>
+			<p>b. a compound vowel, e.g. <em>ao, uo, ou</em>;</p>
+			<p>c. a vowel followed by "<em>n</em>" or "<em>ng</em>," e.g. <em>in, en, ang, ong</em>.</p></blockquote></div>
+     
+        <div id="finals"><h5></h5>
+            <a class="trigger_link tones" href="tones-1">Tones</a>
+        </div>
+            <div id="tones_box"></div>
+            <div class="hidden_content" id="tones-1">
+            <p>There are four (first, second, third and fourth) basic tones and a fifth tone referred to as the neutral tone.</p>
+			<blockquote>
+            	<p>The first tone is high and remains high with no change in pitch; e.g. <a class="pronunciation-tips" href="#" onClick="javascript:soundManager.play('tone1','audio/unit0/unit00_01.mp3');return false;">m&#257;</a></p>
+				<p>The second tone is a raising tone, which starts from the middle pitch and goes up to the high pitch; e.g., <a class="pronunciation-tips" href="#" onClick="javascript:soundManager.play('tone2','audio/unit0/unit00_02.mp3');return false;">m&#225;</a></p>
+				<p>The third tone can be either a full third tone or a half third tone.</p>
+				<blockquote>
+        			<p>The full third tone shows a curve in pitch. It starts from the mid-low pitch and is raised to the mid-high pitch. <a class="pronunciation-tips" href="#" onClick="javascript:soundManager.play('tone3','audio/unit0/unit00_03.mp3');return false;">m&#462;</a></p>
+					<p>The half third tone has no change in pitch. It is low and remains low. In normal speech, a half-third tone is usually adopted unless the speaker wishes to place stress on a third-tone syllable. <a class="pronunciation-tips" href="#" onClick="javascript:soundManager.play('tone4','audio/unit0/unit00_04.mp3');return false;">m&#462;</a></p>
+					<p>When the first syllable of a disyllabic word is the third tone, the half third tone is nearly always adopted in normal speech. <a class="pronunciation-tips" href="#" onClick="javascript:soundManager.play('tone5','audio/unit0/unit00_05.mp3');return false;">m&#462;l&#249;</a> </p>
+				</blockquote>
+			</blockquote>
+			<blockquote>
+            	<p>The fourth tone is a falling tone, which starts high and drops to the low pitch. <a class="pronunciation-tips" href="#" onClick="javascript:soundManager.play('tone6','audio/unit0/unit00_06.mp3');return false;">m&#224;</a></p>
+				<p>A neutral tone is light and low with no obvious change in pitch. <a class="pronunciation-tips" href="#" onClick="javascript:soundManager.play('tone7','audio/unit0/unit00_07.mp3');return false;">ma</a></p>
+			</blockquote>
+			<p>The tone marks representing the four basic tones are <img src="images/tones/tone1.png" /> (the first tone), <img src="images/tones/tone2.png" /> (the second tone), <img src="images/tones/tone3.png" /> (the third tone) and <img src="images/tones/tone4.png" /> (the fourth tone). There is no specific tone mark for the neutral tone.</p>
+			
+            <p>Tone changes:</p>
+			<blockquote>
+	        	<p>Two third tones are normally not pronounced in a row. The general rule is to change the first one into a second tone; e.g. <a class="pronunciation-tips" href="#" onClick="javascript:soundManager.play('tone8','audio/unit0/unit00_08.mp3');return false;">n&#464; h&#462;o;</a> <a class="pronunciation-tips" href="#" onClick="javascript:soundManager.play('tone9','audio/unit0/unit00_09.mp3');return false;">su&#466;y&#464;</a>.</p>
+				<blockquote>
+                	<p>When there are more than two third tones in a row, the general rule described above is still followed; however, where to pause in the speech can play a role in deciding which third tone will be changed into the second tone.</p>
+             
+			<p>e.g. Famous cellist Yo-yo Ma’s name (Y&#466;uy&#466;u  M&#462;) is normally pronounced 2nd ,2nd and 3rd, <a class="pronunciation-tips" href="#" onClick="javascript:soundManager.play('tone10','audio/unit0/unit00_10.mp3');return false;">Y&#243;uy&#243;u  M&#462;</a> but when his name is pronounced with the last name first (<em>M&#462; Y&#466;uy&#466;u</em>), it is normally 3rd, 2nd and 3rd <a class="pronunciation-tips" href="#" onClick="javascript:soundManager.play('tone11','audio/unit0/unit00_11.mp3');return false;">M&#462; Y&#243;uy&#466;u</a>.</p>
+            	</blockquote>
+            </blockquote>
+            <blockquote>
+            <p>Character &#19968; (yi) can be pronounced in the first, the second or the fourth tone, depending on the tone following it.</p>
+				<blockquote>                
+                    <p>It is pronounced in the second tone if it is followed by a four tone or a neutral tone; e.g. <a class="pronunciation-tips" href="#" onClick="javascript:soundManager.play('tone12','audio/unit0/unit00_12.mp3');return false;">y&#237; ji&#224;n;</a> <a class="pronunciation-tips" href="#" onClick="javascript:soundManager.play('tone13','audio/unit0/unit00_13.mp3');return false;">y&#237; ge</a>.</p>
+                    <p>It is pronounced in the fourth tone when it is followed by a first, second, or third tone; e.g. <a class="pronunciation-tips" href="#" onClick="javascript:soundManager.play('tone14','audio/unit0/unit00_14.mp3');return false;">y&#236; zh&#299;</a>; <a class="pronunciation-tips" href="#" onClick="javascript:soundManager.play('tone15','audio/unit0/unit00_15.mp3');return false;">y&#236; q&#250;n</a>; <a class="pronunciation-tips" href="#" onClick="javascript:soundManager.play('tone16','audio/unit0/unit00_16.mp3');return false;">y&#236; z&#468;</a></p>
+                    <p>It can also be pronounced in the first tone no matter what tone follows it; e.g. <a class="pronunciation-tips" href="#" onClick="javascript:soundManager.play('tone17','audio/unit0/unit00_17.mp3');return false;">y&#299; zh&#299;</a>; <a class="pronunciation-tips" href="#" onClick="javascript:soundManager.play('tone18','audio/unit0/unit00_18.mp3');return false;">y&#299; q&#250;n</a>; <a class="pronunciation-tips" href="#" onClick="javascript:soundManager.play('tone19','audio/unit0/unit00_19.mp3');return false;">y&#299; z&#468;</a>; <a class="pronunciation-tips" href="#" onClick="javascript:soundManager.play('tone20','audio/unit0/unit00_20.mp3');return false;">y&#299; ji&#224;n</a>; <a class="pronunciation-tips" href="#" onClick="javascript:soundManager.play('tone21','audio/unit0/unit00_21.mp3');return false;">y&#299; ge</a></p>
+                 </blockquote>
+            </blockquote>
+                
+            <blockquote>
+            <p>Character &#19981; (bu) can be pronounced in either the second tone or the fourth tone depending on the tone following it.</p>
+      			<blockquote>
+                    <p>It is pronounced in the fourth tone when it is followed by the first, the second or the third tone; e.g. <a class="pronunciation-tips" href="#" onClick="javascript:soundManager.play('tone22','audio/unit0/unit00_22.mp3');return false;">b&#249; shu&#333;</a>,    <a class="pronunciation-tips" href="#" onClick="javascript:soundManager.play('tone23','audio/unit0/unit00_23.mp3');return false;">b&#249; n&#233;ng</a>, <a class="pronunciation-tips" href="#" onClick="javascript:soundManager.play('tone24','audio/unit0/unit00_24.mp3');return false;">b&#249;g&#462;n</a>.</p>
+                    <p>It is pronounced in the second tone when it is followed by a fourth tone; e.g. <a class="pronunciation-tips" href="#" onClick="javascript:soundManager.play('tone25','audio/unit0/unit00_25.mp3');return false;">b&#250; y&#224;o</a></p>
+                    <p>It is pronounced in the fourth tone when nothing follows it; e.g., <a class="pronunciation-tips" href="#" onClick="javascript:soundManager.play('tone26','audio/unit0/unit00_26.mp3');return false;">n&#224; k&#283; b&#249;</a></p>
+                </blockquote>
+            </blockquote>
+        
+        </div>
+
+        <div id="finals"><h5></h5>
+            <a class="trigger_link rules" href="rules-1">Pinyin Rules</a>
+        </div>
+            <div id="rules_box"></div>
+            <div class="hidden_content" id="rules-1"> 
+            <p>Tone marks should not be put on top of initials.</p>
+            <p>Do not put tone marks above "<em>i</em>," "<em>u</em>" or "<em>&#252;</em>" when the final is or has a compound vowel. Other cases are <em>&#462;o, i&#250; and u&#236;</em>.</p>
+            <p>Do not start a syllable with "<em>i</em>" or "<em>u</em>." Change "<em>i</em>" to "<em>y</em>," "<em>u</em>" to "<em>w</em>" and "<em>&#252;</em>" to "<em>yu</em>."</p><blockquote>
+              <p>e.g., <em> i  &rarr; y/yi, &nbsp; u &rarr; w/wu, &nbsp; &#252; &rarr; yu</em></p>
+            
+	            <p>e.g., <em>i &rarr; yi; &nbsp; in &rarr; yin; &nbsp; ie &rarr; ye</em></p>
+                <p>e.g., <em>u &rarr; wu; &nbsp; uo &rarr; wo; &nbsp; uang &rarr; wang</em></p>
+                <p>e.g., <em>&#252; &rarr; yu; &nbsp; &#252;e &rarr; yue; &nbsp; &#252;n &rarr; yun</em></p>
+            </blockquote>
+            <p>"uo" never comes after <em>b, p</em> or <em>m</em> (bilabials – sounds involving both lips) although the "<em>u</em>" part should be pronounced. This is because "<em>u</em>" is imbedded in the Chinese bilabial sounds.</p>
+            <p>"<em>–i</em>" after <em>zh, ch, sh, r, z, c, s</em> is a "dummy" <em>i</em>. This means <em>i</em> after <em>zh, ch, sh, r, z, c, s</em> is not pronounced the same way as when it is after another initial or as a stand-alone vowel.</p>
+			<p>"<em>i</em>" or "<em>&#252;</em>" never follows <em>zh, ch, sh, r, z, c, s</em>. On the other hand, <em>j, q, x</em> is ALWAYS followed by either "<em>i</em>" or "<em>&#252;</em>."</p>
+			<p>"<em>e</em>" in "<em>ie</em>" is pronounced differently from a regular "<em>e</em>". It is <em><b>similar</b></em> to the vowel in English <em>yet</em> or <em>yes</em>, whereas a regular "<em>e</em>" is similar (but not identical) to the vowel in English <em>hut</em> or <em>bus</em>.</p>
+			<p>"<em>an</em>," when following "<em>i</em>" or "<em>&#252;</em>," is pronounced differently from a regular "<em>an</em>," which is <em><b>similar</b></em> (but not identical) to the vowel in English <em>line</em>. "<em>an</em>" after "<em>i</em>" or "<em>&#252;</em>," is <em><b>similar</b></em> to the vowel in English <em>den</em>, or <em>end</em>.</p>
+			<p>"<em>iou</em>," when following an initial, is written as "<em>iu</em>," and the tone mark should be placed above "<em>u</em>;" e.g., <em>ni&#250;</em>, <em>di&#363;</em>.</p>
+			<p>"<em>uei</em>," when following an initial, is written as "<em>ui</em>," and the tone mark should be placed above "<em>i</em>," e.g. <em>du&#299;</em>, <em>ru&#236;</em>.</p>
+			<p>"<em>uen</em>," when following an initial, is written as "<em>un</em>" e.g., <em>d&#363;n</em>, <em>h&#249;n</em>.</p>
+			<p>We need not and should not write "<em>&#252;</em>" for <em>umlaut</em> when "<em>&#252;</em>" follows <em>j, q, x</em>. This is because a regular "<em>u</em>" can never follow <em>j, q, x</em>; e.g. <em>j&#468;</em>, <em>q&#250;n</em>, <em>xu&#462;n</em>.</p>
+			<p>An apostrophe (’) is used when a syllable beginning with "<em>a</em>," "<em>o</em>," or "<em>e</em>" follows another syllabus; e.g. <em>X&#299;'&#257;n</em>, <em>n&#474;'&#233;r</em>.</p>
+			<p>The first letter of a proper name should be capitalized; e.g. <em>Zh&#333;nggu&#243;</em>, <em>B&#283;ij&#299;ng</em>, <em>Sh&#224;ngh&#462;i</em>.</p>
+            
+            
+            
+            </div>
+    </div>        
+        <div id="footer"><a href="http://www.utexas.edu/cola/depts/asianstudies/" target="_blank"><img src="images/footer-asianstudies.gif" alt="Department of Asian Studies" border="0" /></a> | <a href="http://laits.utexas.edu" target="_blank">Liberal Arts Instructional Technology Services</a> | <a href="credits.php">Production Credits</a> | <a href="http://creativecommons.org/licenses/by-nc-sa/3.0/" target="_blank">CC BY-NC-SA 3.0</a></div>
+        
+    </div><!--/container-->
+    
+</div><!--/wrapper-->
+</body>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-45849884-1', 'utexas.edu');
+  ga('send', 'pageview');
+
+</script>
+</html>

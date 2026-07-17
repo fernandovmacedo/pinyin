@@ -1,0 +1,8 @@
+{
+  "name": "pinyin-typing",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "test": "node test-runner.mjs"
+  }
+}
