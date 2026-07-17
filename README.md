@@ -1,6 +1,6 @@
 # Pinyin Typing
 
-A standalone browser editor for typing Hanyu Pinyin with tone marks. The input convention (syllable + tone number, `v` for `ü`) follows the [PinyinTones](https://www.pinyintones.com/) Windows IME, which this project is not affiliated with.
+A standalone browser editor for typing Hanyu Pinyin with tone marks. The input convention (syllable + tone number, `v` for `ü`) follows the [PinyinTones](https://www.pinyintones.com/) Windows IME.
 
 Type a Pinyin syllable followed by `1`, `2`, `3`, or `4` to apply a tone mark. Type `v` for `ü` and `V` for `Ü`; type `vv` for a literal `v`. Press Enter to accept the current syllable and Escape to cancel it.
 
@@ -29,6 +29,13 @@ Run the browser tests headlessly (requires a `google-chrome` binary on `PATH`):
 ```sh
 npm test
 ```
+
+## Continuous integration and deployment
+
+GitHub Actions runs the browser tests for every push and pull request. Pushes to
+`master` that pass the tests also deploy this directory's `index.html` and
+`rules.json` to GitHub Pages. Before the first deployment, set the repository's
+**Pages** source to **GitHub Actions** in its GitHub settings.
 
 ## License
 
