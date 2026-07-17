@@ -270,6 +270,11 @@
             background: var(--accent-hover);
         }
 
+        #copy-btn {
+            box-sizing: border-box;
+            width: 100px;
+        }
+
         .validation-button {
             color: #ffffff;
             background: #16803c;
@@ -1253,9 +1258,13 @@
             }
         }
 
-        // Insert pasted text using the same composition rules as typed characters.
-        function insertPastedText(text) {
-            commitComposition();
+        // Insert text using the same composition rules as physical keyboard input.
+        // Mobile virtual keyboards send characters through beforeinput rather than
+        // keydown, so keeping this logic shared makes tone conversion consistent.
+        function insertTextWithComposition(text, { commitBefore = true, commitAfter = true } = {}) {
+            if (commitBefore) {
+                commitComposition();
+            }
 
             const selStart = editor.selectionStart;
             const selEnd = editor.selectionEnd;
@@ -1298,7 +1307,14 @@
                 }
             }
 
-            commitComposition();
+            if (commitAfter) {
+                commitComposition();
+            }
+        }
+
+        // Pasted text is a complete insertion, so it should not remain active.
+        function insertPastedText(text) {
+            insertTextWithComposition(text);
         }
 
         function handlePaste(e) {
@@ -1309,6 +1325,18 @@
 
             e.preventDefault();
             insertPastedText(text);
+        }
+
+        // Virtual keyboards on iOS and Android usually do not emit useful
+        // keydown events. Intercept their plain-text insertions before the
+        // browser applies them and run them through the same converter.
+        function handleBeforeInput(e) {
+            if (e.inputType !== 'insertText' || !e.data || e.isComposing) {
+                return;
+            }
+
+            e.preventDefault();
+            insertTextWithComposition(e.data, { commitBefore: false, commitAfter: false });
         }
 
         // Handle selection changes (clicks, caret moves)
@@ -1429,6 +1457,16 @@
                 compStart = null;
                 insertPastedText('Nv3 shi4');
                 assertEq(editor.value, 'Nǚ shì');
+            });
+            test('Virtual keyboard input converts tone numbers', function() {
+                editor.value = '';
+                editor.setSelectionRange(0, 0);
+                compStart = null;
+                for (const key of 'ni3 hao3') {
+                    insertTextWithComposition(key, { commitBefore: false, commitAfter: false });
+                }
+                assertEq(editor.value, 'nǐ hǎo');
+                assertEq(compStart, null);
             });
 
             test('Suggests you for a bare iou', function() {
@@ -1611,6 +1649,7 @@
 
         // Event listeners
         editor.addEventListener('keydown', handleKeyDown);
+        editor.addEventListener('beforeinput', handleBeforeInput);
         editor.addEventListener('input', scheduleValidation);
         editor.addEventListener('paste', handlePaste);
         editor.addEventListener('scroll', syncValidationScroll);

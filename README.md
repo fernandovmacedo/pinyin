@@ -4,7 +4,7 @@ A standalone browser editor for typing Hanyu Pinyin with tone marks. The input c
 
 Type a Pinyin syllable followed by `1`, `2`, `3`, or `4` to apply a tone mark. Type `v` for `ü` and `V` for `Ü`; type `vv` for a literal `v`. Press Enter to accept the current syllable and Escape to cancel it.
 
-The editor listens to physical keyboard events, so it needs a desktop browser; most mobile virtual keyboards will not trigger tone conversion.
+The editor works with physical and mobile virtual keyboards. Type a syllable followed by its tone number to convert it.
 
 Pinyin checking is enabled by default and marks invalid syllables with a red wavy underline. It recognizes adjacent syllables such as `nǐhǎo`; use **Check Pinyin** to turn validation off while writing non-Pinyin text. Hover an underline for a bilingual explanation, examples, and sources; click or tap it to keep the explanation open.
 
