@@ -343,6 +343,45 @@ export function createPinyinEngine(manifest) {
     .sort(
       (first, second) => second.misspelling.length - first.misspelling.length,
     );
+  const zeroOnsetSpellings = new Map([
+    ['i', 'yi'],
+    ['ia', 'ya'],
+    ['ie', 'ye'],
+    ['iao', 'yao'],
+    ['iou', 'you'],
+    ['ian', 'yan'],
+    ['iang', 'yang'],
+    ['in', 'yin'],
+    ['ing', 'ying'],
+    ['iong', 'yong'],
+    ['u', 'wu'],
+    ['ua', 'wa'],
+    ['uo', 'wo'],
+    ['uai', 'wai'],
+    ['uei', 'wei'],
+    ['uan', 'wan'],
+    ['uen', 'wen'],
+    ['uang', 'wang'],
+    ['ueng', 'weng'],
+    ['ü', 'yu'],
+    ['üe', 'yue'],
+    ['üan', 'yuan'],
+    ['ün', 'yun'],
+    ['iu', 'you'],
+    ['ui', 'wei'],
+    ['un', 'wen'],
+  ]);
+  const zeroOnsetCandidates = Array.from(
+    zeroOnsetSpellings,
+    ([misspelling, suggestion]) => ({ misspelling, suggestion }),
+  ).sort(
+    (first, second) => second.misspelling.length - first.misspelling.length,
+  );
+  const abbreviations = new Map([
+    ['iou', 'iu'],
+    ['uei', 'ui'],
+    ['uen', 'un'],
+  ]);
 
   function syllablesStartingAt(normalized, index) {
     return syllablesByFirstChar.get(normalized[index]) || [];
@@ -424,7 +463,25 @@ export function createPinyinEngine(manifest) {
     return best[normalized.length] || [];
   }
 
-  function getSpellingDiagnostics(run) {
+  // Every offset reachable by segmenting the prefix entirely into valid
+  // syllables. Special spelling rules use these as candidate starts so they
+  // can work inside compounds without matching inside a valid syllable.
+  function findSyllableBoundaryOffsets(normalized) {
+    const boundaries = new Set([0]);
+    for (let index = 0; index < normalized.length; index++) {
+      if (!boundaries.has(index)) {
+        continue;
+      }
+      for (const syllable of syllablesStartingAt(normalized, index)) {
+        if (normalized.startsWith(syllable, index)) {
+          boundaries.add(index + syllable.length);
+        }
+      }
+    }
+    return boundaries;
+  }
+
+  function getSpellingDiagnostics(run, knownInvalidOffsets = null) {
     const diagnostics = [];
     for (const segment of findSyllableSegments(run)) {
       const spelling = run.substring(segment.start, segment.end);
@@ -451,78 +508,76 @@ export function createPinyinEngine(manifest) {
       }
     }
     const normalized = normalizePinyin(run);
-    // Carry the run's tone mark over to a respelled suggestion so, for
-    // example, iǒu suggests yǒu rather than a toneless you.
-    const runTone =
-      Array.from(run, (ch) => lookupChar(ch) % 5).find((value) => value > 0) ||
-      0;
-    const withRunTone = (base) =>
-      matchSuggestionCase(run, runTone ? setTone(base, runTone) : base);
-    const zeroOnsetSpellings = new Map([
-      ['i', 'yi'],
-      ['ia', 'ya'],
-      ['ie', 'ye'],
-      ['iao', 'yao'],
-      ['iou', 'you'],
-      ['ian', 'yan'],
-      ['iang', 'yang'],
-      ['in', 'yin'],
-      ['ing', 'ying'],
-      ['iong', 'yong'],
-      ['u', 'wu'],
-      ['ua', 'wa'],
-      ['uo', 'wo'],
-      ['uai', 'wai'],
-      ['uei', 'wei'],
-      ['uan', 'wan'],
-      ['uen', 'wen'],
-      ['uang', 'wang'],
-      ['ueng', 'weng'],
-      ['ü', 'yu'],
-      ['üe', 'yue'],
-      ['üan', 'yuan'],
-      ['ün', 'yun'],
-      ['iu', 'you'],
-      ['ui', 'wei'],
-      ['un', 'wen'],
-    ]);
-    const zeroOnsetSuggestion = zeroOnsetSpellings.get(normalized);
-    if (zeroOnsetSuggestion && syllables.has(zeroOnsetSuggestion)) {
-      diagnostics.push({
-        start: 0,
-        end: run.length,
-        diagnostic: getDiagnostic(
-          run,
-          'zero-onset-spelling',
-          withRunTone(zeroOnsetSuggestion),
-        ),
-      });
-    }
-    const { initial } = getInitialAndFinal(normalized);
-    const abbreviations = new Map([
-      ['iou', 'iu'],
-      ['uei', 'ui'],
-      ['uen', 'un'],
-    ]);
-    for (const [longFinal, shortFinal] of abbreviations) {
-      if (
-        initial &&
-        normalized === initial + longFinal &&
-        syllables.has(initial + shortFinal)
-      ) {
+    const boundaries = findSyllableBoundaryOffsets(normalized);
+    const invalidOffsets = new Set(
+      knownInvalidOffsets ?? findInvalidOffsets(run),
+    );
+    // Carry the affected syllable's tone and casing into a respelling, even
+    // when other toned syllables occur earlier in the same unspaced run.
+    const respell = (spelling, base) => {
+      const tone =
+        Array.from(spelling, (ch) => lookupChar(ch) % 5).find(
+          (value) => value > 0,
+        ) || 0;
+      return matchSuggestionCase(spelling, tone ? setTone(base, tone) : base);
+    };
+
+    // A zero-onset misspelling begins where the normal syllable parser had
+    // to skip a character. Requiring both an invalid offset and a reachable
+    // prefix boundary avoids treating the i inside a valid gui as standalone.
+    for (const index of boundaries) {
+      if (!invalidOffsets.has(index)) {
+        continue;
+      }
+      const match = zeroOnsetCandidates.find(({ misspelling }) =>
+        normalized.startsWith(misspelling, index),
+      );
+      if (match && syllables.has(match.suggestion)) {
+        const spelling = run.substring(index, index + match.misspelling.length);
         diagnostics.push({
-          start: 0,
-          end: run.length,
+          start: index,
+          end: index + match.misspelling.length,
           diagnostic: getDiagnostic(
-            run,
-            'abbreviated-final-spelling',
-            withRunTone(initial + shortFinal),
+            spelling,
+            'zero-onset-spelling',
+            respell(spelling, match.suggestion),
           ),
         });
       }
     }
-    // Unlike the other whole-run respellings above, explicit ü after j/q/x
-    // must also be recognized inside an unspaced word (xǖyào -> xūyào).
+
+    // Long finals can also form a valid alternative segmentation (cū+en),
+    // so inspect every reachable syllable boundary even when no character is
+    // otherwise invalid. The apostrophe pass remains free to report its own
+    // interpretation of the same text.
+    for (const index of boundaries) {
+      const suffix = normalized.substring(index);
+      const initial = sortedInitials.find((candidate) =>
+        suffix.startsWith(candidate),
+      );
+      if (!initial) {
+        continue;
+      }
+      for (const [longFinal, shortFinal] of abbreviations) {
+        const misspelling = initial + longFinal;
+        const suggestion = initial + shortFinal;
+        if (suffix.startsWith(misspelling) && syllables.has(suggestion)) {
+          const spelling = run.substring(index, index + misspelling.length);
+          diagnostics.push({
+            start: index,
+            end: index + misspelling.length,
+            diagnostic: getDiagnostic(
+              spelling,
+              'abbreviated-final-spelling',
+              respell(spelling, suggestion),
+            ),
+          });
+          break;
+        }
+      }
+    }
+    // Explicit ü after j/q/x must likewise be recognized inside an unspaced
+    // word (xǖyào -> xūyào).
     // Match the longest real palatal syllable at each position so the
     // diagnostic covers only the affected syllable, not its neighbors.
     for (let index = 0; index < normalized.length; index++) {
@@ -534,21 +589,13 @@ export function createPinyinEngine(manifest) {
       );
       if (match) {
         const spelling = run.substring(index, index + match.misspelling.length);
-        const tone =
-          Array.from(spelling, (ch) => lookupChar(ch) % 5).find(
-            (value) => value > 0,
-          ) || 0;
-        const suggestion = matchSuggestionCase(
-          spelling,
-          tone ? setTone(match.suggestion, tone) : match.suggestion,
-        );
         diagnostics.push({
           start: index,
           end: index + match.misspelling.length,
           diagnostic: getDiagnostic(
             spelling,
             'umlaut-spelling-after-palatal',
-            suggestion,
+            respell(spelling, match.suggestion),
           ),
         });
         index += match.misspelling.length - 1;
@@ -639,7 +686,11 @@ export function createPinyinEngine(manifest) {
     const diagnosticsByStart = new Map();
     forEachPinyinRun(text, (runStart, end) => {
       const run = text.substring(runStart, end);
-      for (const spellingDiagnostic of getSpellingDiagnostics(run)) {
+      const invalidOffsets = findInvalidOffsets(run);
+      for (const spellingDiagnostic of getSpellingDiagnostics(
+        run,
+        invalidOffsets,
+      )) {
         const start = runStart + spellingDiagnostic.start;
         diagnosticsByStart.set(start, spellingDiagnostic.diagnostic);
         for (
@@ -650,7 +701,6 @@ export function createPinyinEngine(manifest) {
           invalid.add(cursor);
         }
       }
-      const invalidOffsets = findInvalidOffsets(run);
       for (const offset of invalidOffsets) {
         const index = runStart + offset;
         if (

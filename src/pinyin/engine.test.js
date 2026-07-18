@@ -70,6 +70,11 @@ test('setTone handles erhua spellings the same as their base syllable', () => {
 test('every syllable in the manifest, and its erhua form, validates', () => {
   for (const syl of engine.syllables) {
     assert.deepEqual(engine.findInvalidOffsets(syl), [], syl);
+    assert.deepEqual(
+      engine.getInvalidPinyinRanges(syl),
+      [],
+      `${syl} spelling diagnostics`,
+    );
   }
 });
 
@@ -141,6 +146,16 @@ test('third-tone sandhi resolves chains pairwise, right to left', () => {
   assert.deepEqual(sandhiSummary('nǐ hǎo'), ['nǐ->2']);
   assert.deepEqual(sandhiSummary('wǒ hěn hǎo'), ['wǒ->2', 'hěn->2']);
   assert.deepEqual(sandhiSummary('nǐhǎo'), ['nǐ->2'], 'no separator needed');
+});
+
+test('sandhi crosses every supported inter-run separator', () => {
+  for (const separator of [' ', '\t', '-', "'", '’', '‘']) {
+    assert.deepEqual(
+      sandhiSummary(`nǐ${separator}hǎo`),
+      ['nǐ->2'],
+      JSON.stringify(separator),
+    );
+  }
 });
 
 test('bù (不) changes tone only before another fourth tone', () => {

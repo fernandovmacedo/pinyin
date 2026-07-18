@@ -95,6 +95,13 @@ const fixtures = [
     sandhi: [],
   },
   {
+    name: 'zero-onset spelling is diagnosed at the start of an unspaced compound',
+    text: 'Tā iǒudiǎn lèi.',
+    invalid: [{ match: 'iǒu', rule: 'zero-onset-spelling', suggestion: 'yǒu' }],
+    apostrophes: [],
+    sandhi: [],
+  },
+  {
     name: 'an unabbreviated final is ambiguous with a missing apostrophe, and both checks fire independently',
     // "niou" parses two ways: the single syllable niu spelled long (fix:
     // abbreviate to niu), or the two syllables ni + ou run together (fix:
@@ -106,6 +113,15 @@ const fixtures = [
       { match: 'niou', rule: 'abbreviated-final-spelling', suggestion: 'niu' },
     ],
     apostrophes: [{ match: 'niou', suggestion: "ni'ou" }],
+    sandhi: [],
+  },
+  {
+    name: 'an unabbreviated final keeps both interpretations inside an unspaced compound',
+    text: 'Zhège cūenluò hěn ānjìng.',
+    invalid: [
+      { match: 'cūen', rule: 'abbreviated-final-spelling', suggestion: 'cūn' },
+    ],
+    apostrophes: [{ match: 'cūen', suggestion: "cū'en" }],
     sandhi: [],
   },
   {
@@ -275,6 +291,19 @@ const fixtures = [
     apostrophes: [],
     sandhi: [],
   },
+  {
+    name: 'the longest palatal-ü syllable is diagnosed inside an unspaced word',
+    text: 'Wǒ xǚanzé zhège.',
+    invalid: [
+      {
+        match: 'xǚan',
+        rule: 'umlaut-spelling-after-palatal',
+        suggestion: 'xuǎn',
+      },
+    ],
+    apostrophes: [],
+    sandhi: [],
+  },
 
   // ── The v-for-ü typing convention ────────────────────────────────────
   {
@@ -341,6 +370,21 @@ const fixtures = [
     name: 'zero-onset spelling with a u-final: uo must be written wo',
     text: 'Uǒ ài nǐ.',
     invalid: [{ match: 'Uǒ', rule: 'zero-onset-spelling', suggestion: 'Wǒ' }],
+    apostrophes: [],
+    sandhi: [],
+  },
+  {
+    name: 'corrections preserve title case and all caps across diagnostic paths',
+    text: 'Dùi, QǗN, QVN.',
+    invalid: [
+      { match: 'Dùi', rule: 'tone-mark-placement', suggestion: 'Duì' },
+      {
+        match: 'QǗN',
+        rule: 'umlaut-spelling-after-palatal',
+        suggestion: 'QÚN',
+      },
+      { match: 'QVN', rule: 'palatal-final-mismatch', suggestion: 'QUN' },
+    ],
     apostrophes: [],
     sandhi: [],
   },
