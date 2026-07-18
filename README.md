@@ -12,7 +12,7 @@ Pinyin checking is enabled by default and marks invalid syllables with a red wav
 
 A dotted underline marks a missing apostrophe between two syllables, such as `Xian` where `Xi'an` was intended. This only fires on text typed with its own tone marks, since that is what tells `Xi'an` (two syllables) apart from `xiàn` (one).
 
-**Tone colors** is an opt-in toggle that tints each syllable by its tone number.
+**Tone colors** is enabled by default and tints each syllable by its tone number. Use the toggle to turn it off.
 
 Pasting text written with tone numbers (e.g. `Ni3 hao3! Wo3 jiao4 Li3 Ming2, hen3 gao1xing4 ren4shi ni3.`) converts it the same way as typing it.
 
@@ -48,3 +48,5 @@ GitHub Actions runs the browser tests for every push and pull request. Pushes to
 ## License
 
 The code in this repository is released under the [MIT License](LICENSE). The documents in [`sources/`](sources/) are third-party materials that keep their original licenses — see [`sources/README.md`](sources/README.md) for the per-file details.
+
+The favicon uses Lucide's [Languages](https://lucide.dev/icons/languages) icon, licensed under the ISC License; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pinyin Typing</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <style>
         :root {
             --bg-primary: #ffffff;
@@ -483,7 +484,7 @@
         <button id="copy-btn">Copy text</button>
         <button id="clear-btn">Clear</button>
         <button class="validation-button" id="validation-toggle" type="button" aria-pressed="true" aria-label="Pinyin checking is on">Check: On</button>
-        <button class="validation-button" id="tone-color-toggle" type="button" aria-pressed="false" aria-label="Tone colors are off">Tone colors: Off</button>
+        <button class="validation-button" id="tone-color-toggle" type="button" aria-pressed="true" aria-label="Tone colors are on">Tone colors: On</button>
     </div>
 
     <div class="instructions">
@@ -720,7 +721,8 @@
         // State
         let compStart = null;  // Start index of composition, or null if not composing
         let pinyinValidationEnabled = true;
-        let toneColoringEnabled = localStorage.getItem('toneColors') === 'on';
+        // Show tone colors by default; retain an explicit opt-out for returning users.
+        let toneColoringEnabled = localStorage.getItem('toneColors') !== 'off';
         let validationFrame = null;
         let pinnedDiagnostic = null;
         let tooltipHideTimer = null;
@@ -2162,17 +2164,22 @@
                 const ranges = getToneRanges('nǐ hǎo');
                 assertEq(JSON.stringify(ranges), '[{"start":0,"end":2,"tone":3},{"start":3,"end":6,"tone":3}]');
             });
-            test('Tone coloring is off by default and toggles on click', function() {
-                assertEq(toneColorToggle.getAttribute('aria-pressed'), 'false');
+            test('Tone coloring is on by default and toggles off on click', function() {
+                assertEq(toneColorToggle.getAttribute('aria-pressed'), 'true');
                 editor.value = 'gāo';
                 renderValidation();
-                assertEq(highlights.querySelector('.tone-1'), null);
+                assertEq(highlights.querySelector('.tone-1').textContent, 'gāo');
 
                 toneColorToggle.click();
                 renderValidation();
-                assertEq(toneColorToggle.textContent, 'Tone colors: On');
-                assertEq(highlights.querySelector('.tone-1').textContent, 'gāo');
+                assertEq(toneColorToggle.textContent, 'Tone colors: Off');
+                assertEq(highlights.querySelector('.tone-1'), null);
 
+                toneColorToggle.click();
+                assertEq(toneColorToggle.textContent, 'Tone colors: On');
+
+                // Leave the remaining rendering tests in their historical
+                // uncolored state; this does not affect the initial default.
                 toneColorToggle.click();
                 assertEq(toneColorToggle.textContent, 'Tone colors: Off');
             });
