@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "playwright test",
+    "test:fixtures": "node --test src/pinyin/engine.fixtures.test.js",
     "test:watch": "playwright test --ui",
     "test:unit": "node --test 'src/**/*.test.js'"
   },
