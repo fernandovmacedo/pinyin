@@ -16,6 +16,8 @@ A dotted underline marks a missing apostrophe between two syllables, such as `Xi
 
 Pasting text written with tone numbers (e.g. `Ni3 hao3! Wo3 jiao4 Li3 Ming2, hen3 gao1xing4 ren4shi ni3.`) converts it the same way as typing it.
 
+Your text is saved automatically in this browser and restored on your next visit. **Share link** copies a URL with your current text packed into the hash fragment as compact base64 (not human-readable, but shorter than spelling out tone marks in a query string, and never sent to a server since fragments aren't part of an HTTP request) — open it to load that text into a fresh editor without disturbing your own saved draft.
+
 ## Pinyin rules
 
 [`rules.json`](rules.json) is the single source of truth for valid syllables, teaching explanations, examples, and citations. Its rules are based on the official Hanyu Pinyin Scheme and ISO 7098, with University of Iowa compatibility lessons and UT Austin pronunciation instruction used for learner-facing guidance. The explanations are original summaries of those sources.

@@ -482,6 +482,7 @@
 
     <div class="button-row">
         <button id="copy-btn">Copy text</button>
+        <button id="share-btn">Share link</button>
         <button id="clear-btn">Clear</button>
         <button class="validation-button" id="validation-toggle" type="button" aria-pressed="true" aria-label="Pinyin checking is on">Check: On</button>
         <button class="validation-button" id="tone-color-toggle" type="button" aria-pressed="true" aria-label="Tone colors are on">Tone colors: On</button>
@@ -500,6 +501,7 @@
             <li>A dotted underline marks a missing apostrophe between syllables, such as <strong>hai'ou</strong></li>
             <li>A teal underline marks a tone-sandhi hint — the syllable is pronounced with a different tone than written, such as <strong>nǐ hǎo</strong> (said <strong>ní hǎo</strong>)</li>
             <li><strong>Tone colors</strong> tints each syllable by its tone</li>
+            <li>Your text is saved in this browser automatically; use <strong>Share link</strong> to copy a URL that carries your current text to someone else</li>
         </ul>
         <p><strong>Example:</strong> Type <code>Ni3 hao3! Wo3 jiao4 Li3 Ming2, hen3 gao1xing4 ren4shi ni3.</code> to get <strong>Nǐ hǎo! Wǒ jiào Lǐ Míng, hěn gāoxìng rènshi nǐ.</strong> ("Hello! My name is Li Ming, nice to meet you." — all four tones plus the neutral tone.)</p>
     </div>
@@ -509,6 +511,10 @@
     <script>
     (function() {
         'use strict';
+
+        // ?test drives the self-test harness (test-runner.mjs); it must not
+        // restore or persist a draft, since the tests mutate editor.value directly.
+        const isTestMode = new URLSearchParams(window.location.search).has('test');
 
         // Theme handling
         function setTheme(theme) {
@@ -553,6 +559,8 @@
                 rulesError: 'Unable to load Pinyin rules. Serve this editor over HTTP and reload.',
                 copyBtn: 'Copy text',
                 copyDone: 'Copied!',
+                shareBtn: 'Share link',
+                shareDone: 'Link copied!',
                 clearBtn: 'Clear',
                 checkOn: 'Check: On',
                 checkOff: 'Check: Off',
@@ -574,6 +582,7 @@
                     'A dotted underline marks a missing apostrophe between syllables, such as <strong>hai\'ou</strong>',
                     'A teal underline marks a tone-sandhi hint — the syllable is pronounced with a different tone than written, such as <strong>nǐ hǎo</strong> (said <strong>ní hǎo</strong>)',
                     '<strong>Tone colors</strong> tints each syllable by its tone',
+                    'Your text is saved in this browser automatically; use <strong>Share link</strong> to copy a URL that carries your current text to someone else',
                 ],
                 exampleHtml: '<strong>Example:</strong> Type <code>Ni3 hao3! Wo3 jiao4 Li3 Ming2, hen3 gao1xing4 ren4shi ni3.</code> to get <strong>Nǐ hǎo! Wǒ jiào Lǐ Míng, hěn gāoxìng rènshi nǐ.</strong> ("Hello! My name is Li Ming, nice to meet you." — all four tones plus the neutral tone.)',
                 diagnosticCardLabel: 'Pinyin rule explanation',
@@ -595,6 +604,8 @@
                 rulesError: 'Não foi possível carregar as regras de Pinyin. Sirva este editor via HTTP e recarregue a página.',
                 copyBtn: 'Copiar texto',
                 copyDone: 'Copiado!',
+                shareBtn: 'Compartilhar link',
+                shareDone: 'Link copiado!',
                 clearBtn: 'Limpar',
                 checkOn: 'Verificação: Ativada',
                 checkOff: 'Verificação: Desativada',
@@ -616,6 +627,7 @@
                     'Um sublinhado pontilhado indica um apóstrofo ausente entre sílabas, como em <strong>hai\'ou</strong>',
                     'Um sublinhado azul-petróleo indica uma dica de mudança de tom (sandhi) — a sílaba é pronunciada com um tom diferente do escrito, como em <strong>nǐ hǎo</strong> (pronuncia-se <strong>ní hǎo</strong>)',
                     '<strong>Cores de tom</strong> colore cada sílaba de acordo com seu tom',
+                    'Seu texto é salvo neste navegador automaticamente; use <strong>Compartilhar link</strong> para copiar uma URL que leva seu texto atual para outra pessoa',
                 ],
                 exampleHtml: '<strong>Exemplo:</strong> Digite <code>Ni3 hao3! Wo3 jiao4 Li3 Ming2, hen3 gao1xing4 ren4shi ni3.</code> para obter <strong>Nǐ hǎo! Wǒ jiào Lǐ Míng, hěn gāoxìng rènshi nǐ.</strong> ("Olá! Meu nome é Li Ming, prazer em conhecê-lo." — os quatro tons mais o tom neutro.)',
                 diagnosticCardLabel: 'Explicação da regra de Pinyin',
@@ -630,6 +642,7 @@
         const themeSelectorEl = document.querySelector('.theme-selector');
         const githubLinkEl = document.querySelector('.github-link');
         const copyBtn = document.getElementById('copy-btn');
+        const shareBtn = document.getElementById('share-btn');
         const clearBtn = document.getElementById('clear-btn');
         const instructionsHeading = document.querySelector('.instructions h2');
         const instructionsItems = document.querySelectorAll('.instructions li');
@@ -638,7 +651,7 @@
         let uiLang = 'en';
 
         function detectInitialLang() {
-            if (new URLSearchParams(window.location.search).has('test')) {
+            if (isTestMode) {
                 return 'en';
             }
             const stored = localStorage.getItem('lang');
@@ -667,6 +680,7 @@
             langToggle.setAttribute('title', t.langSwitchLabel);
             editor.placeholder = t.editorPlaceholder;
             copyBtn.textContent = t.copyBtn;
+            shareBtn.textContent = t.shareBtn;
             clearBtn.textContent = t.clearBtn;
             instructionsHeading.textContent = t.howToUse;
             instructionsItems.forEach((item, i) => {
@@ -726,6 +740,9 @@
         let pinyinValidationEnabled = true;
         // Show tone colors by default; retain an explicit opt-out for returning users.
         let toneColoringEnabled = localStorage.getItem('toneColors') !== 'off';
+        // Tracks the last text written to (or read from) the 'draft' localStorage
+        // key, so renderValidation only writes when the text actually changed.
+        let lastSavedDraft = '';
         let validationFrame = null;
         let pinnedDiagnostic = null;
         let tooltipHideTimer = null;
@@ -1336,9 +1353,86 @@
             positionDiagnosticCard(target);
         }
 
+        // Persist the current text as the user's draft, skipped entirely in
+        // ?test mode so the self-tests never read or write real localStorage.
+        function saveDraftIfChanged(text) {
+            if (text === lastSavedDraft) {
+                return;
+            }
+            lastSavedDraft = text;
+            if (text) {
+                localStorage.setItem('draft', text);
+            } else {
+                localStorage.removeItem('draft');
+            }
+        }
+
+        // Encode UTF-8 text as URL-safe base64 (RFC 4648 §5, unpadded), so a
+        // shared link's hash needs no percent-encoding: pinyin's tone marks
+        // cost 6 characters apiece as %C7%90 etc. in plain UTF-8, but the
+        // same bytes cost under 2 characters apiece in base64.
+        function toBase64Url(text) {
+            const bytes = new TextEncoder().encode(text);
+            let binary = '';
+            for (const byte of bytes) {
+                binary += String.fromCharCode(byte);
+            }
+            return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        }
+
+        // The inverse of toBase64Url. Throws on malformed input; callers
+        // catch that to fall back to the saved draft.
+        function fromBase64Url(encoded) {
+            const base64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
+            const padded = base64 + '='.repeat((4 - base64.length % 4) % 4);
+            const binary = atob(padded);
+            const bytes = Uint8Array.from(binary, ch => ch.charCodeAt(0));
+            return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+        }
+
+        // Read the shared text out of a location.hash-shaped string (leading
+        // '#' optional). Returns null when empty or malformed so callers can
+        // fall back to the saved draft.
+        function readSharedText(hash) {
+            const encoded = hash.startsWith('#') ? hash.slice(1) : hash;
+            if (!encoded) {
+                return null;
+            }
+            try {
+                return fromBase64Url(encoded);
+            } catch {
+                return null;
+            }
+        }
+
+        // Decide what should be in the editor on load: a shared link's text
+        // wins over the saved draft, but does not itself become the draft
+        // until the visitor edits it (so the draft stays safe).
+        function resolveInitialText(hash, storedDraft) {
+            const shared = readSharedText(hash);
+            if (shared !== null) {
+                return { text: shared, fromShare: true };
+            }
+            return { text: storedDraft || '', fromShare: false };
+        }
+
+        // Build a shareable URL carrying the current text, base64url-encoded
+        // in the hash fragment. Not human-readable, but far shorter than the
+        // same text percent-encoded, and never sent to a server (fragments
+        // aren't included in HTTP requests).
+        function buildShareUrl(text, href) {
+            const url = new URL(href);
+            url.search = '';
+            url.hash = text ? toBase64Url(text) : '';
+            return url.href;
+        }
+
         function renderValidation() {
             validationFrame = null;
             const text = editor.value;
+            if (!isTestMode) {
+                saveDraftIfChanged(text);
+            }
             const selectionStart = document.activeElement === editor ? editor.selectionStart : null;
             const selectionEnd = document.activeElement === editor ? editor.selectionEnd : null;
             const sandhiHints = getToneSandhiHints(text);
@@ -1942,17 +2036,32 @@
             }
         }
 
+        // Briefly replace a button's label (e.g. "Copied!") before restoring it.
+        function flashButtonLabel(btn, message) {
+            const originalText = btn.textContent;
+            btn.textContent = message;
+            setTimeout(function() {
+                btn.textContent = originalText;
+            }, 1500);
+        }
+
         // Copy button
-        document.getElementById('copy-btn').addEventListener('click', function() {
+        copyBtn.addEventListener('click', function() {
             navigator.clipboard.writeText(editor.value).then(function() {
-                const btn = document.getElementById('copy-btn');
-                const originalText = btn.textContent;
-                btn.textContent = I18N[uiLang].copyDone;
-                setTimeout(function() {
-                    btn.textContent = originalText;
-                }, 1500);
+                flashButtonLabel(copyBtn, I18N[uiLang].copyDone);
             }).catch(function(err) {
                 console.error('Copy failed:', err);
+            });
+        });
+
+        // Share button: copies a URL with the current text as a ?text= param
+        // (not stored as the draft — see resolveInitialText).
+        shareBtn.addEventListener('click', function() {
+            const url = buildShareUrl(editor.value, window.location.href);
+            navigator.clipboard.writeText(url).then(function() {
+                flashButtonLabel(shareBtn, I18N[uiLang].shareDone);
+            }).catch(function(err) {
+                console.error('Share failed:', err);
             });
         });
 
@@ -1961,6 +2070,7 @@
             editor.value = '';
             compStart = null;
             updateIndicator();
+            scheduleValidation();
         });
 
         validationToggle.addEventListener('click', function() {
@@ -1975,6 +2085,48 @@
         // Detect the interface language (stored preference, else browser locale,
         // defaulting to English) and apply it to the chrome strings above.
         setLanguage(detectInitialLang());
+
+        // Restore a shared link's text (and strip it from the address bar so
+        // reloading or bookmarking doesn't keep re-sharing it) or, failing
+        // that, the draft saved from a previous visit. Skipped in ?test mode.
+        if (!isTestMode) {
+            const storedDraft = localStorage.getItem('draft') || '';
+            const initial = resolveInitialText(window.location.hash, storedDraft);
+            if (initial.text) {
+                editor.value = initial.text;
+            }
+            // Seed lastSavedDraft with whatever is now on screen (not the old
+            // storedDraft) so the imminent initial renderValidation() call is a
+            // no-op: a shared link's text must not overwrite the saved draft
+            // until the visitor actually edits it.
+            lastSavedDraft = initial.text;
+            if (initial.fromShare) {
+                const cleanUrl = new URL(window.location.href);
+                cleanUrl.hash = '';
+                history.replaceState(null, '', cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
+            }
+
+            // A navigation that changes only the hash of an already-open
+            // document is treated as in-page by browsers and never re-runs
+            // this script (e.g. two shared links opened back-to-back in the
+            // same tab). Handle that case separately; unlike the startup
+            // load above, an absent or malformed hash here is a no-op, not
+            // a fallback to the stored draft, since it must not clobber
+            // whatever the visitor is already looking at.
+            window.addEventListener('hashchange', function() {
+                const shared = readSharedText(window.location.hash);
+                if (shared === null) {
+                    return;
+                }
+                compStart = null;
+                editor.value = shared;
+                lastSavedDraft = shared;
+                const cleanUrl = new URL(window.location.href);
+                cleanUrl.hash = '';
+                history.replaceState(null, '', cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
+                scheduleValidation();
+            });
+        }
 
         // Self-test function
         window.runSelfTests = function() {
@@ -2484,6 +2636,61 @@
                 assertEq(setTone(setTone('ni', 3), 4), 'nì');
             });
 
+            // Shareable links
+            test('toBase64Url and fromBase64Url round-trip toned Pinyin', function() {
+                assertEq(fromBase64Url(toBase64Url('Nǐ hǎo! Wǒ jiào Lǐ Míng.')), 'Nǐ hǎo! Wǒ jiào Lǐ Míng.');
+            });
+            test('toBase64Url output has no padding or query/fragment-unsafe characters', function() {
+                const encoded = toBase64Url('Nǐ hǎo');
+                assertEq(/^[A-Za-z0-9_-]+$/.test(encoded), true);
+            });
+            test('buildShareUrl encodes text in the hash, not the query string', function() {
+                const url = buildShareUrl('Nǐ hǎo', 'http://x.test/pinyin/');
+                const parsed = new URL(url);
+                assertEq(parsed.search, '');
+                assertEq(fromBase64Url(parsed.hash.slice(1)), 'Nǐ hǎo');
+            });
+            test('buildShareUrl omits the hash for empty editor', function() {
+                const url = buildShareUrl('', 'http://x.test/pinyin/?stale=1#stale');
+                const parsed = new URL(url);
+                assertEq(parsed.search, '');
+                assertEq(parsed.hash, '');
+            });
+            test('readSharedText decodes a base64url hash', function() {
+                assertEq(readSharedText('#' + toBase64Url('Nǐ')), 'Nǐ');
+            });
+            test('readSharedText accepts a hash without the leading #', function() {
+                assertEq(readSharedText(toBase64Url('Nǐ')), 'Nǐ');
+            });
+            test('readSharedText returns null for an empty hash', function() {
+                assertEq(readSharedText(''), null);
+                assertEq(readSharedText('#'), null);
+            });
+            test('readSharedText returns null for a malformed hash', function() {
+                assertEq(readSharedText('#not valid base64!'), null);
+            });
+            test('resolveInitialText prefers a shared link over the stored draft', function() {
+                const resolved = resolveInitialText('#' + toBase64Url('Hi'), 'stored draft');
+                assertEq(resolved.text, 'Hi');
+                assertEq(resolved.fromShare, true);
+            });
+            test('resolveInitialText falls back to the stored draft', function() {
+                const resolved = resolveInitialText('', 'stored draft');
+                assertEq(resolved.text, 'stored draft');
+                assertEq(resolved.fromShare, false);
+            });
+
+            // Draft persistence
+            test('saveDraftIfChanged writes and clears localStorage', function() {
+                const before = lastSavedDraft;
+                localStorage.removeItem('draft');
+                saveDraftIfChanged('nǐ hǎo');
+                assertEq(localStorage.getItem('draft'), 'nǐ hǎo');
+                saveDraftIfChanged('');
+                assertEq(localStorage.getItem('draft'), null);
+                lastSavedDraft = before;
+            });
+
             console.log('=== Test Results: ' + passed + ' passed, ' + failed + ' failed ===');
             return { passed, failed };
         };
@@ -2548,12 +2755,12 @@
 
         renderValidation();
         loadPinyinRules().then(() => {
-            if (new URLSearchParams(window.location.search).has('test')) {
+            if (isTestMode) {
                 const summary = window.runSelfTests();
                 document.documentElement.dataset.testResult = `${summary.passed}:${summary.failed}`;
             }
         }).catch(() => {
-            if (new URLSearchParams(window.location.search).has('test')) {
+            if (isTestMode) {
                 document.documentElement.dataset.testResult = '0:1';
             }
         });
