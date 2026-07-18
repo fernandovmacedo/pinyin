@@ -3,4 +3,6 @@ node_modules/
 playwright-report/
 test-results/
 sources/
+# Keep the syllable groups in this manifest compact and grouped by initial.
+src/data/rules.json
 CLAUDE.md
