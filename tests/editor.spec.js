@@ -86,6 +86,25 @@ test('works when opened directly from disk as a single file', async ({
   await expect(editor).toHaveValue('nǐ');
 });
 
+test('typing a full sentence with tone digits and v converts correctly and flags a deliberate error', async ({
+  page,
+}) => {
+  await page.goto('/');
+
+  const editor = page.locator('#editor');
+  // "lv4se4" exercises the v -> ü key (lǜsè, "green"); "chi1 fan4" exercises
+  // ordinary tone digits; "jo1" is a deliberate typo (no valid jo syllable)
+  // to confirm the resulting sentence still gets flagged where it should.
+  // The tone digit applies regardless of the syllable's validity, so the
+  // typo surfaces as "jō", not literal "jo1".
+  await editor.pressSequentially('lv4se4 chi1 fan4 jo1');
+  await expect(editor).toHaveValue('lǜsè chī fàn jō');
+
+  await editor.press('Enter'); // commit the composition so validation runs
+  const invalid = page.locator('#validation-highlights .invalid-pinyin');
+  await expect(invalid).toHaveText('jō');
+});
+
 test('diagnostic card sources link to real external URLs', async ({ page }) => {
   await page.goto('/');
 
