@@ -44,10 +44,11 @@ npm run build
 
 `npm run test:unit` runs the Node-native unit tests for the DOM-free pure
 logic in `src/pinyin/engine.js` and `src/share-link.js` (`node --test`, no
-new dependency). `npm test` runs the Playwright browser tests with Google
-Chrome; in CI, Chrome is installed by the workflow. Add browser scenarios
-under `tests/`; application code must not include test-only URL modes or
-globals.
+new dependency); run it before pushing changes to either module, since CI
+does not run it yet (see below). `npm test` runs the Playwright browser
+tests with Google Chrome; in CI, Chrome is installed by the workflow. Add
+browser scenarios under `tests/`; application code must not include
+test-only URL modes or globals.
 
 ## The rules manifest contract
 
@@ -75,5 +76,6 @@ Commit that generated file so the repository always includes the downloadable
 standalone application.
 
 GitHub Actions checks formatting, linting, browser tests, and the build for
-every push and pull request. Successful pushes to `master` deploy
-`dist/index.html` to GitHub Pages.
+every push and pull request (it does not currently run `npm run test:unit`;
+run that locally). Successful pushes to `master` deploy `dist/index.html`
+to GitHub Pages.
