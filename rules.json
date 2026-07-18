@@ -67,6 +67,19 @@
         "zh": "爱荷华大学开放教材。第 8 章讲解声韵拼合限制，附录提供兼容性图表。"
       },
       "license": "CC BY-NC 4.0; cited for independently written summaries."
+    },
+    {
+      "id": "mandarin-sounds-tone-sandhi",
+      "title": {
+        "en": "Mastering Mandarin Sounds — Tone Sandhi",
+        "zh": "《掌握普通话语音》——变调"
+      },
+      "url": "sources/Mastering-Mandarin-Sounds.md#tone-sandhi-tone-changes-in-context",
+      "note": {
+        "en": "University of Iowa open textbook chapter on tone changes in context: third-tone pairs, bù, and yī.",
+        "zh": "爱荷华大学开放教材章节，讲解语流中的变调：三声连读、“不”与“一”的变调。"
+      },
+      "license": "CC BY-NC 4.0; cited for independently written summaries."
     }
   ],
   "syllables": [
@@ -239,6 +252,39 @@
       },
       "examples": ["Xi'an", "nü'er", "Chang'an", "ping'an"],
       "sources": ["ut-austin-pinyin-rules", "hanyu-pinyin-scheme"]
+    },
+    {
+      "id": "third-tone-sandhi",
+      "initials": [],
+      "title": { "en": "Third-tone sandhi", "zh": "三声变调" },
+      "explanation": {
+        "en": "{{syllable}} is written third tone but pronounced second tone here, because the next syllable is also a third tone: written 3rd + 3rd is pronounced 2nd + 3rd, so say {{suggestion}}. In chains of three or more third tones this pairwise change is a good default, but phrasing and pauses can shift which syllables actually change. The written tone mark stays third tone.",
+        "zh": "{{syllable}} 标写为第三声，但因后面紧跟另一个第三声音节，此处读作第二声：书面 3+3，口语读 2+3，即读作 {{suggestion}}。三个及以上第三声连读时通常按此逐对变调，但实际停顿与语组会影响哪些音节变调。书写时声调符号仍标第三声。"
+      },
+      "examples": ["nǐ hǎo → ní hǎo", "suǒyǐ → suóyǐ", "wǒ hěn hǎo → wó hén hǎo"],
+      "sources": ["ut-austin-pinyin-rules", "mandarin-sounds-tone-sandhi"]
+    },
+    {
+      "id": "bu-tone-sandhi",
+      "initials": [],
+      "title": { "en": "Tone change of bù (不)", "zh": "“不”的变调" },
+      "explanation": {
+        "en": "bù (不) is written fourth tone, but before another fourth-tone syllable it is pronounced second tone: say {{suggestion}}. Before first, second, or third tones, and at the end of a phrase, it keeps the fourth tone. The written form stays bù.",
+        "zh": "“不”标写为第四声，但在第四声音节前读作第二声：即读作 {{suggestion}}。在第一、二、三声前以及短语末尾仍读第四声。书写时仍标 bù。"
+      },
+      "examples": ["bù shì → bú shì", "bù yào → bú yào", "bù shuō (unchanged)"],
+      "sources": ["ut-austin-pinyin-rules", "mandarin-sounds-tone-sandhi"]
+    },
+    {
+      "id": "yi-tone-sandhi",
+      "initials": [],
+      "title": { "en": "Tone change of yī (一)", "zh": "“一”的变调" },
+      "explanation": {
+        "en": "yī (一) is written first tone, but before a fourth-tone syllable it is pronounced second tone (yí), and before a first-, second-, or third-tone syllable it is pronounced fourth tone (yì). Here, say {{suggestion}}. Exception: in ordinals, dates, and counting (dì yī, yī yuè, yī èr sān), yī keeps its written first tone.",
+        "zh": "“一”标写为第一声，但在第四声前读第二声（yí），在第一、二、三声前读第四声（yì）。此处读作 {{suggestion}}。例外：序数、日期与数数（第一、一月、一二三）中，“一”仍读第一声。"
+      },
+      "examples": ["yī gè → yí gè", "yī bàn → yí bàn", "yī tiān → yì tiān", "dì yī (unchanged)"],
+      "sources": ["ut-austin-pinyin-rules", "mandarin-sounds-tone-sandhi"]
     }
   ]
 }

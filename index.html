@@ -22,6 +22,7 @@
             --tone-2: #02b31c;
             --tone-3: #1510f0;
             --tone-4: #8900bf;
+            --sandhi-hint: #0e7c86;
         }
 
         [data-theme="light"] {
@@ -41,6 +42,7 @@
             --tone-2: #02b31c;
             --tone-3: #1510f0;
             --tone-4: #8900bf;
+            --sandhi-hint: #0e7c86;
         }
 
         [data-theme="dark"] {
@@ -60,6 +62,7 @@
             --tone-2: #4cf064;
             --tone-3: #6a68f3;
             --tone-4: #c24cf0;
+            --sandhi-hint: #3fd3e0;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -80,6 +83,7 @@
                 --tone-2: #4cf064;
                 --tone-3: #6a68f3;
                 --tone-4: #c24cf0;
+                --sandhi-hint: #3fd3e0;
             }
         }
 
@@ -184,6 +188,16 @@
             text-decoration-line: underline;
             text-decoration-style: dotted;
             text-decoration-color: #b5790a;
+            text-decoration-thickness: 1.5px;
+            text-underline-offset: 3px;
+        }
+
+        .sandhi-pinyin {
+            pointer-events: auto;
+            cursor: help;
+            text-decoration-line: underline;
+            text-decoration-style: solid;
+            text-decoration-color: var(--sandhi-hint);
             text-decoration-thickness: 1.5px;
             text-underline-offset: 3px;
         }
@@ -449,6 +463,7 @@
             <li>Backspace works normally</li>
             <li><strong>Check Pinyin</strong> underlines invalid syllables; turn it off when writing non-Pinyin text</li>
             <li>A dotted underline marks a missing apostrophe between syllables, such as <strong>Xi'an</strong></li>
+            <li>A teal underline marks a tone-sandhi hint — the syllable is pronounced with a different tone than written, such as <strong>nǐ hǎo</strong> (said <strong>ní hǎo</strong>)</li>
             <li><strong>Tone colors</strong> tints each syllable by its tone</li>
         </ul>
         <p><strong>Example:</strong> Type <code>Ni3 hao3! Wo3 jiao4 Li3 Ming2, hen3 gao1xing4 ren4shi ni3.</code> to get <strong>Nǐ hǎo! Wǒ jiào Lǐ Míng, hěn gāoxìng rènshi nǐ.</strong> ("Hello! My name is Li Ming, nice to meet you." — all four tones plus the neutral tone.)</p>
@@ -962,6 +977,93 @@
             return ranges;
         }
 
+        // A separator between two Pinyin runs that keeps them adjacent for
+        // tone sandhi purposes: spaces, tabs, hyphens, and apostrophes.
+        // Anything else (sentence punctuation, newlines, digits, CJK) is a
+        // phrase break, so sandhi does not reach across it.
+        function isSandhiSeparator(separator) {
+            return /^[ \t\-'’‘]+$/.test(separator);
+        }
+
+        // Tone sandhi hints: syllables whose pronounced tone differs from
+        // the written one. Covers third-tone pairs (nǐ hǎo → ní hǎo) and the
+        // tone changes of bù and yī. Only fires within and across fully
+        // valid Pinyin runs, using written tones as context so chains of
+        // three or more third tones resolve pairwise, right to left.
+        function getToneSandhiHints(text) {
+            if (!pinyinValidationEnabled || !pinyinRules) {
+                return [];
+            }
+
+            // Pass 1: a document-wide ordered list of syllables, spanning
+            // run boundaries, each carrying whether it is adjacent to the
+            // syllable before it.
+            const syllables = [];
+            let prevRunEnd = null;
+            forEachPinyinRun(text, (runStart, runEnd) => {
+                const run = text.substring(runStart, runEnd);
+                const segments = findSpokenSyllableSegments(run);
+                if (segments.length === 0) {
+                    prevRunEnd = null;
+                    return;
+                }
+                segments.forEach((segment, i) => {
+                    const spelling = run.substring(segment.start, segment.end);
+                    const tone = Array.from(spelling, ch => lookupChar(ch) % 5).find(value => value > 0) || 0;
+                    const adjacentToPrev = i > 0 ||
+                        (prevRunEnd !== null && isSandhiSeparator(text.substring(prevRunEnd, runStart)));
+                    syllables.push({
+                        start: runStart + segment.start,
+                        end: runStart + segment.end,
+                        syllable: segment.syllable,
+                        tone,
+                        adjacentToPrev,
+                    });
+                });
+                prevRunEnd = runEnd;
+            });
+
+            // Pass 2: apply the sandhi rules against written tones. Reading
+            // the next syllable's written tone (rather than its already
+            // sandhi-adjusted tone) makes the third-tone rule resolve
+            // chains pairwise, right to left, in a single non-cascading
+            // pass: wǒ hěn hǎo (3-3-3) becomes wó hén hǎo (2-2-3).
+            const hints = [];
+            for (let i = 0; i < syllables.length - 1; i++) {
+                const curr = syllables[i];
+                const next = syllables[i + 1];
+                if (!next.adjacentToPrev) {
+                    continue;
+                }
+                let spokenTone = null;
+                let ruleId = null;
+                if (curr.tone === 3 && next.tone === 3) {
+                    spokenTone = 2;
+                    ruleId = 'third-tone-sandhi';
+                } else if (curr.syllable === 'bu' && curr.tone === 4 && next.tone === 4) {
+                    spokenTone = 2;
+                    ruleId = 'bu-tone-sandhi';
+                } else if (curr.syllable === 'yi' && curr.tone === 1 && next.tone === 4) {
+                    spokenTone = 2;
+                    ruleId = 'yi-tone-sandhi';
+                } else if (curr.syllable === 'yi' && curr.tone === 1 && next.tone >= 1 && next.tone <= 3) {
+                    spokenTone = 4;
+                    ruleId = 'yi-tone-sandhi';
+                }
+                if (spokenTone === null) {
+                    continue;
+                }
+                const spelling = text.substring(curr.start, curr.end);
+                hints.push({
+                    start: curr.start,
+                    end: curr.end,
+                    spokenTone,
+                    diagnostic: getDiagnostic(spelling, ruleId, setTone(spelling, spokenTone)),
+                });
+            }
+            return hints;
+        }
+
         function escapeHtml(text) {
             return text.replace(/[&<>"']/g, ch => ({
                 '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
@@ -1030,11 +1132,22 @@
         function renderValidation() {
             validationFrame = null;
             const text = editor.value;
+            const sandhiHints = getToneSandhiHints(text);
             const diagnosticRanges = [
                 ...getInvalidPinyinRanges(text).map(range => ({ ...range, severity: 'invalid' })),
                 ...getMissingApostropheDiagnostics(text).map(range => ({ ...range, severity: 'advisory' })),
+                ...sandhiHints.map(range => ({ ...range, severity: 'sandhi' })),
             ];
             const toneRanges = toneColoringEnabled ? getToneRanges(text) : [];
+            // Tone sandhi always adjusts the underline/hover hint, but only
+            // recolors the syllable when tone coloring is on; match by
+            // start offset so a segmentation mismatch just skips the swap.
+            const spokenToneByStart = new Map(sandhiHints.map(hint => [hint.start, hint.spokenTone]));
+            for (const range of toneRanges) {
+                if (spokenToneByStart.has(range.start)) {
+                    range.tone = spokenToneByStart.get(range.start);
+                }
+            }
 
             // Diagnostic ranges and tone ranges are drawn from independent
             // passes and can overlap (a syllable can be both an apostrophe hint
@@ -1050,6 +1163,7 @@
                 boundaries.add(range.end);
             }
             const points = Array.from(boundaries).sort((a, b) => a - b);
+            const severityClasses = { invalid: 'invalid-pinyin', advisory: 'advisory-pinyin', sandhi: 'sandhi-pinyin' };
 
             let html = '';
             for (let i = 0; i < points.length - 1; i++) {
@@ -1069,7 +1183,7 @@
                 const classes = [];
                 let attrs = '';
                 if (diagnosticRange) {
-                    classes.push('pinyin-diagnostic', diagnosticRange.severity === 'advisory' ? 'advisory-pinyin' : 'invalid-pinyin');
+                    classes.push('pinyin-diagnostic', severityClasses[diagnosticRange.severity]);
                     attrs = ` data-start="${diagnosticRange.start}" data-end="${diagnosticRange.end}" data-rule-id="${escapeHtml(diagnosticRange.diagnostic.rule.id)}" data-suggestion="${escapeHtml(diagnosticRange.diagnostic.suggestion)}"`;
                 }
                 if (toneRange) {
@@ -1820,17 +1934,106 @@
             });
             test('Tone coloring is off by default and toggles on click', function() {
                 assertEq(toneColorToggle.getAttribute('aria-pressed'), 'false');
-                editor.value = 'nǐ hǎo';
+                editor.value = 'gāo';
                 renderValidation();
-                assertEq(highlights.querySelector('.tone-3'), null);
+                assertEq(highlights.querySelector('.tone-1'), null);
 
                 toneColorToggle.click();
                 renderValidation();
                 assertEq(toneColorToggle.textContent, 'Tone colors: On');
-                assertEq(highlights.querySelector('.tone-3').textContent, 'nǐ');
+                assertEq(highlights.querySelector('.tone-1').textContent, 'gāo');
 
                 toneColorToggle.click();
                 assertEq(toneColorToggle.textContent, 'Tone colors: Off');
+            });
+
+            // Tone sandhi hints
+            test('Detects third-tone sandhi between two adjacent third tones', function() {
+                const hints = getToneSandhiHints('nǐ hǎo');
+                assertEq(hints.length, 1);
+                assertEq(hints[0].start, 0);
+                assertEq(hints[0].end, 2);
+                assertEq(hints[0].spokenTone, 2);
+                assertEq(hints[0].diagnostic.rule.id, 'third-tone-sandhi');
+                assertEq(hints[0].diagnostic.suggestion, 'ní');
+            });
+            test('Resolves a chain of three third tones pairwise, right to left', function() {
+                const hints = getToneSandhiHints('wǒ hěn hǎo');
+                assertEq(hints.length, 2);
+                assertEq(hints[0].diagnostic.suggestion, 'wó');
+                assertEq(hints[1].diagnostic.suggestion, 'hén');
+            });
+            test('Detects third-tone sandhi within a single run', function() {
+                assertEq(getToneSandhiHints('nǐhǎo').length, 1);
+            });
+            test('Detects the tone change of bù before a fourth tone', function() {
+                const hints = getToneSandhiHints('bù shì');
+                assertEq(hints.length, 1);
+                assertEq(hints[0].diagnostic.rule.id, 'bu-tone-sandhi');
+                assertEq(hints[0].diagnostic.suggestion, 'bú');
+            });
+            test('Does not change bù before a non-fourth tone', function() {
+                assertEq(getToneSandhiHints('bù shuō').length, 0);
+            });
+            test('Detects yī pronounced second tone before a fourth tone', function() {
+                const hints = getToneSandhiHints('yī gè');
+                assertEq(hints.length, 1);
+                assertEq(hints[0].diagnostic.rule.id, 'yi-tone-sandhi');
+                assertEq(hints[0].diagnostic.suggestion, 'yí');
+            });
+            test('Detects yī pronounced fourth tone before a first tone', function() {
+                const hints = getToneSandhiHints('yī tiān');
+                assertEq(hints.length, 1);
+                assertEq(hints[0].diagnostic.rule.id, 'yi-tone-sandhi');
+                assertEq(hints[0].diagnostic.suggestion, 'yì');
+            });
+            test('Sentence punctuation breaks a sandhi chain', function() {
+                assertEq(getToneSandhiHints('nǐ. hǎo').length, 0);
+            });
+            test('A newline breaks a sandhi chain', function() {
+                assertEq(getToneSandhiHints('nǐ\nhǎo').length, 0);
+            });
+            test('An apostrophe between runs still counts as adjacent', function() {
+                assertEq(getToneSandhiHints('nǚ’ěr').length, 1);
+            });
+            test('A neutral-tone following syllable does not trigger bù sandhi', function() {
+                assertEq(getToneSandhiHints('bù shi').length, 0);
+            });
+            test('Third-tone sandhi applies to an erhua syllable', function() {
+                const hints = getToneSandhiHints('nǎr hǎo');
+                assertEq(hints.length, 1);
+                assertEq(hints[0].diagnostic.suggestion, 'nár');
+            });
+            test('Can disable tone sandhi hints via Check Pinyin', function() {
+                setPinyinValidation(false);
+                assertEq(getToneSandhiHints('nǐ hǎo').length, 0);
+                setPinyinValidation(true);
+            });
+            test('Renders a teal underline for a sandhi hint regardless of tone coloring', function() {
+                editor.value = 'nǐ hǎo';
+                renderValidation();
+                const sandhi = highlights.querySelector('.sandhi-pinyin');
+                assertEq(sandhi !== null, true);
+                assertEq(sandhi.textContent, 'nǐ');
+                assertEq(highlights.querySelector('.tone-2'), null);
+            });
+            test('Colors a sandhi syllable by its pronounced tone once tone coloring is on', function() {
+                editor.value = 'nǐ hǎo';
+                toneColorToggle.click();
+                renderValidation();
+                assertEq(highlights.querySelector('.tone-2').textContent, 'nǐ');
+                assertEq(highlights.querySelector('.tone-3').textContent, 'hǎo');
+                toneColorToggle.click();
+            });
+            test('Renders a sandhi hover card with bilingual explanation and sources', function() {
+                editor.value = 'nǐ hǎo';
+                renderValidation();
+                showDiagnostic(highlights.querySelector('.sandhi-pinyin'), true);
+                assertEq(diagnosticCard.textContent.includes('Third-tone sandhi'), true);
+                assertEq(diagnosticCard.textContent.includes('三声变调'), true);
+                assertEq(diagnosticCard.textContent.includes('ní'), true);
+                assertEq(diagnosticCard.querySelectorAll('a').length >= 2, true);
+                hideDiagnostic();
             });
 
             // No vowel in syllable (m, ng, etc.)
