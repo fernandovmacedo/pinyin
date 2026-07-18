@@ -93,6 +93,18 @@
         "zh": "爱荷华大学开放教材章节《变调（语境中的声调变化）》，讲解语流中的变调：三声连读、“不”与“一”的变调。仓库中 sources/Mastering-Mandarin-Sounds.md 提供 GFM 格式的阅读副本。"
       },
       "license": "CC BY-NC 4.0; cited for independently written summaries."
+    },
+    {
+      "id": "pinyin-table-nonstandard",
+      "title": {
+        "en": "Pinyin Table — nonstandard syllables",
+        "zh": "拼音表——非标准音节"
+      },
+      "url": "https://en.wikipedia.org/wiki/Pinyin_table",
+      "note": {
+        "en": "A cross-reference table of Standard Chinese Pinyin syllables. It identifies its italicized entries as nonstandard regionalisms, neologisms, or slang; it is used here only to identify marginal spellings for a non-blocking learner-facing hint.",
+        "zh": "普通话拼音音节的交叉参考表。该表将斜体条目标为非标准的方言词、新词或俚语；这里仅用它识别边缘拼写，以提供面向学习者的非阻断提示。"
+      }
     }
   ],
   "syllables": [
@@ -121,6 +133,9 @@
     "ya", "yan", "yang", "yao", "ye", "yi", "yin", "ying", "yo", "yong", "you", "yu", "yuan", "yue", "yun",
     "wa", "wai", "wan", "wang", "wei", "wen", "weng", "wo", "wu",
     "e", "ei", "en", "eng", "er", "o", "ou"
+  ],
+  "marginalSyllables": [
+    "tei", "kei", "zhei", "cei", "dia", "lia", "rua"
   ],
   "rules": [
     {
@@ -379,6 +394,22 @@
       },
       "examples": ["bng", "ae", "mn"],
       "sources": ["hanyu-pinyin-scheme", "iso-7098"]
+    },
+    {
+      "id": "regional-nonstandard-syllable",
+      "initials": [],
+      "title": {
+        "en": "Regional or nonstandard syllable",
+        "zh": "方言或非标准音节",
+        "pt": "Sílaba regional ou não padrão"
+      },
+      "explanation": {
+        "en": "{{syllable}} is a recognized regional, colloquial, or otherwise nonstandard Pinyin syllable. It is accepted so you can write quotations, names, or regional language, but it is outside the core Standard Mandarin syllable inventory.",
+        "zh": "{{syllable}} 是可识别的方言、口语或其他非标准拼音音节。它仍被接受，以便书写引文、姓名或地域性语言；但它不属于核心普通话音节表。",
+        "pt": "{{syllable}} é uma sílaba de Pinyin regional, coloquial ou não padrão reconhecida. Ela é aceita para que você possa escrever citações, nomes ou linguagem regional, mas está fora do inventário central de sílabas do mandarim padrão."
+      },
+      "examples": ["tei", "kei", "zhei", "cei", "dia", "lia", "rua"],
+      "sources": ["pinyin-table-nonstandard"]
     },
     {
       "id": "missing-apostrophe",

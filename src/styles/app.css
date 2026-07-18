@@ -16,6 +16,7 @@
   --tone-3: #1510f0;
   --tone-4: #8900bf;
   --sandhi-hint: #0e7c86;
+  --regional-hint: #86528d;
 }
 
 [data-theme='light'] {
@@ -56,6 +57,7 @@
   --tone-3: #6a68f3;
   --tone-4: #c24cf0;
   --sandhi-hint: #3fd3e0;
+  --regional-hint: #e3a6ea;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -77,6 +79,7 @@
     --tone-3: #6a68f3;
     --tone-4: #c24cf0;
     --sandhi-hint: #3fd3e0;
+    --regional-hint: #e3a6ea;
   }
 }
 
@@ -182,14 +185,22 @@ h1 {
   text-underline-offset: 3px;
 }
 
-.sandhi-pinyin {
+.sandhi-pinyin,
+.regional-pinyin {
   pointer-events: auto;
   cursor: help;
   text-decoration-line: underline;
   text-decoration-style: solid;
-  text-decoration-color: var(--sandhi-hint);
   text-decoration-thickness: 1.5px;
   text-underline-offset: 3px;
+}
+
+.sandhi-pinyin {
+  text-decoration-color: var(--sandhi-hint);
+}
+
+.regional-pinyin {
+  text-decoration-color: var(--regional-hint);
 }
 
 .tone-1 {

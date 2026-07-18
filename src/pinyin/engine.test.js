@@ -78,6 +78,23 @@ test('every syllable in the manifest, and its erhua form, validates', () => {
   }
 });
 
+test('marks marginal syllables without treating them as invalid', () => {
+  const text = 'Tēi kēi zhèi cēi diǎ liǎ ruá zhèir';
+  assert.deepEqual(engine.getInvalidPinyinRanges(text), []);
+  assert.deepEqual(
+    engine.getRegionalSyllableHints(text).map((hint) => ({
+      spelling: text.substring(hint.start, hint.end),
+      rule: hint.diagnostic.rule.id,
+    })),
+    ['Tēi', 'kēi', 'zhèi', 'cēi', 'diǎ', 'liǎ', 'ruá', 'zhèir'].map(
+      (spelling) => ({
+        spelling,
+        rule: 'regional-nonstandard-syllable',
+      }),
+    ),
+  );
+});
+
 test('flags a tone mark placed on the wrong vowel and suggests the fix', () => {
   function wrongPlacements(syl, tone) {
     const right = referenceSetTone(syl, tone);

@@ -420,6 +420,7 @@ function renderValidation() {
       : { start: compStart, end: editor.selectionStart };
   const checking = pinyinValidationEnabled && engine !== null;
   const sandhiHints = checking ? engine.getToneSandhiHints(text) : [];
+  const regionalHints = checking ? engine.getRegionalSyllableHints(text) : [];
   const diagnosticRanges = [
     ...(checking
       ? engine.getInvalidPinyinRanges(text, compositionRange)
@@ -431,6 +432,7 @@ function renderValidation() {
     ...(checking ? engine.getUnnecessaryApostropheDiagnostics(text) : []).map(
       (range) => ({ ...range, severity: 'advisory' }),
     ),
+    ...regionalHints.map((range) => ({ ...range, severity: 'regional' })),
     ...sandhiHints.map((range) => ({ ...range, severity: 'sandhi' })),
   ];
   const toneRanges =
@@ -467,6 +469,7 @@ function renderValidation() {
   const severityClasses = {
     invalid: 'invalid-pinyin',
     advisory: 'advisory-pinyin',
+    regional: 'regional-pinyin',
     sandhi: 'sandhi-pinyin',
   };
   let html = '';

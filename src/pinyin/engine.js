@@ -308,6 +308,7 @@ function matchSuggestionCase(spelling, suggestion) {
 // than re-derived on every lookup.
 export function createPinyinEngine(manifest) {
   const syllables = new Set(manifest.syllables);
+  const marginalSyllables = new Set(manifest.marginalSyllables || []);
   // Erhua: standard Mandarin Pinyin appends r to almost any syllable to
   // spell the retroflex diminutive (wánr, huàr). This is a generative
   // spelling rule, not a fixed list, so it is derived here instead of
@@ -998,6 +999,31 @@ export function createPinyinEngine(manifest) {
     return hints;
   }
 
+  // Marginal syllables remain valid for segmentation and tone editing, but
+  // receive a learner-facing hint when they are regional, colloquial, or
+  // otherwise outside the core Standard Mandarin inventory.
+  function getRegionalSyllableHints(text) {
+    const hints = [];
+    forEachPinyinRun(text, (runStart, runEnd) => {
+      const run = text.substring(runStart, runEnd);
+      for (const segment of findSpokenSyllableSegments(run)) {
+        const baseSyllable = segment.syllable.endsWith('r')
+          ? segment.syllable.substring(0, segment.syllable.length - 1)
+          : segment.syllable;
+        if (!marginalSyllables.has(baseSyllable)) {
+          continue;
+        }
+        const spelling = run.substring(segment.start, segment.end);
+        hints.push({
+          start: runStart + segment.start,
+          end: runStart + segment.end,
+          diagnostic: getDiagnostic(spelling, 'regional-nonstandard-syllable'),
+        });
+      }
+    });
+    return hints;
+  }
+
   return {
     syllables,
     getInitialAndFinal,
@@ -1013,5 +1039,6 @@ export function createPinyinEngine(manifest) {
     getUnnecessaryApostropheDiagnostics,
     getToneRanges,
     getToneSandhiHints,
+    getRegionalSyllableHints,
   };
 }

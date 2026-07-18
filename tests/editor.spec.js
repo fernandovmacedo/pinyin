@@ -126,6 +126,29 @@ test('diagnostic card sources link to real external URLs', async ({ page }) => {
   }
 });
 
+test('regional syllables get a non-blocking hint and explanation', async ({
+  page,
+}) => {
+  await page.goto('/');
+
+  const editor = page.locator('#editor');
+  await editor.fill('Zhèi liǎ ruá');
+
+  await expect(
+    page.locator('#validation-highlights .invalid-pinyin'),
+  ).toHaveCount(0);
+  const regional = page.locator(
+    '#validation-highlights .regional-pinyin[data-rule-id="regional-nonstandard-syllable"]',
+  );
+  await expect(regional).toHaveCount(3);
+  await expect(regional.first()).toHaveText('Zhèi');
+
+  await regional.first().click();
+  await expect(page.locator('#diagnostic-card h2')).toHaveText(
+    'Regional or nonstandard syllable',
+  );
+});
+
 test('unnecessary apostrophe advisory exposes its rule and suggestion', async ({
   page,
 }) => {

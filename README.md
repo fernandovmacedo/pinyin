@@ -9,7 +9,7 @@ A standalone browser editor for typing Hanyu Pinyin with tone marks: type a syll
 
 Type a Pinyin syllable followed by `1`, `2`, `3`, or `4` to apply a tone mark. To change an existing syllable's tone, place the caret on it and press `1`–`4`; press `5` to remove its tone mark for the neutral tone. Type `v` for `ü` and `V` for `Ü`; type `vv` for a literal `v`. Press Enter to accept the current syllable and Escape to cancel it. The editor works with physical and mobile virtual keyboards.
 
-Pinyin checking is enabled by default and marks invalid syllables with a red wavy underline. It recognizes adjacent syllables such as `nǐhǎo` and erhua spellings such as `wánr`; use **Check** to turn validation off while writing non-Pinyin text. Hover an underline for an explanation with examples and sources, shown in the interface language alongside Chinese; click or tap it to keep the explanation open.
+Pinyin checking is enabled by default and marks invalid syllables with a red wavy underline. It recognizes adjacent syllables such as `nǐhǎo` and erhua spellings such as `wánr`; use **Check** to turn validation off while writing non-Pinyin text. A teal underline, like the tone-sandhi hint, marks accepted regional or nonstandard syllables without treating them as errors. Hover an underline for an explanation with examples and sources, shown in the interface language alongside Chinese; click or tap it to keep the explanation open.
 
 When a misspelling is close to exactly one valid syllable, the explanation adds a "Did you mean" suggestion — `qvn` suggests `qun`, and rule-aware corrections cover cases like tone marks on the wrong vowel, zero-onset spellings (`ie` → `ye`), and `ü` written after `j`, `q`, or `x`. If several syllables are equally close, no guess is made.
 

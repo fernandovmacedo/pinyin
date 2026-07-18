@@ -22,6 +22,20 @@ export function validateRulesManifest(manifest) {
     }
   }
 
+  if (manifest.marginalSyllables !== undefined) {
+    if (!Array.isArray(manifest.marginalSyllables)) {
+      throw new Error('Marginal syllables must be an array when provided.');
+    }
+    const syllables = new Set(manifest.syllables);
+    for (const syllable of manifest.marginalSyllables) {
+      if (!syllables.has(syllable)) {
+        throw new Error(
+          `Marginal syllable ${syllable} is not a valid syllable.`,
+        );
+      }
+    }
+  }
+
   for (const rule of manifest.rules) {
     if (
       !rule.id ||

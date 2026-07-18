@@ -58,8 +58,10 @@ what the checker accepts or how it explains a mistake, edit that manifest—not
 the JavaScript.
 
 Top-level shape: `version`, `documentation`, `sources`, `syllables` (the
-plain, toneless spellings of every valid syllable), and `rules` (the teaching
-rules shown in explanation cards).
+plain, toneless spellings of every valid syllable), optional
+`marginalSyllables` (accepted spellings that receive a non-blocking regional
+or nonstandard hint), and `rules` (the teaching rules shown in explanation
+cards). Every marginal syllable must also appear in `syllables`.
 
 `validateRulesManifest` runs at startup. Every source needs `id`, `url`,
 and `title.en` / `title.zh`. Every rule needs `id`, `title.en` /
