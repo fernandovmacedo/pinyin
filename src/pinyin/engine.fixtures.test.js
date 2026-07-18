@@ -379,6 +379,33 @@ const fixtures = [
 
   // ── More tone-mark placement and respelling coverage ─────────────────
   {
+    name: 'tone-mark priority catches the common ao, ou, and ue mistakes in running text',
+    // In ao, a takes the mark; in ou, o takes it; and in xue (the
+    // palatal spelling of üe), e takes it. The ui/iu last-letter cases
+    // are exercised in the next fixture.
+    text: 'Wǒ xǐhuan haǒ de goǔ. Dōngtiān yǒu xǔe.',
+    invalid: [
+      { match: 'haǒ', rule: 'tone-mark-placement', suggestion: 'hǎo' },
+      { match: 'goǔ', rule: 'tone-mark-placement', suggestion: 'gǒu' },
+      { match: 'xǔe', rule: 'tone-mark-placement', suggestion: 'xuě' },
+    ],
+    apostrophes: [],
+    sandhi: [
+      {
+        match: 'Wǒ',
+        spokenTone: 2,
+        rule: 'third-tone-sandhi',
+        suggestion: 'Wó',
+      },
+      {
+        match: 'yǒu',
+        spokenTone: 2,
+        rule: 'third-tone-sandhi',
+        suggestion: 'yóu',
+      },
+    ],
+  },
+  {
     name: 'the two classic placement traps (ui and iu take the tone on the last letter), plus bù sandhi on the misspelled neighbor',
     // dùi is misspelled but still parses as the syllable dui with a 4th
     // tone, so the bù before it correctly picks up bu-tone-sandhi.
@@ -417,6 +444,16 @@ const fixtures = [
     name: 'zero-onset spelling with a u-final: uo must be written wo',
     text: 'Uǒ ài nǐ.',
     invalid: [{ match: 'Uǒ', rule: 'zero-onset-spelling', suggestion: 'Wǒ' }],
+    apostrophes: [],
+    sandhi: [],
+  },
+  {
+    name: 'ü remains meaningful after n and l, so correct spellings are not false positives',
+    // Dropping the umlaut here creates a different valid Pinyin syllable
+    // (nǚ → nǔ; lǜ → lù). Without Hanzi or lexical context, the checker
+    // must preserve both spellings rather than guess the writer's word.
+    text: "Wǒ de nǚ'ér xǐhuan lǜchá.",
+    invalid: [],
     apostrophes: [],
     sandhi: [],
   },

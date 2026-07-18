@@ -56,6 +56,19 @@
       "license": "CC BY-NC-SA 3.0"
     },
     {
+      "id": "ku-pinyin-spelling-conventions",
+      "title": {
+        "en": "University of Kansas: Pinyin Spelling Conventions",
+        "zh": "堪萨斯大学：《拼音拼写规则》"
+      },
+      "url": "https://opentext.ku.edu/tingyiting/chapter/lesson19/",
+      "note": {
+        "en": "University of Kansas open textbook lesson on tone-mark placement, ü spelling, zero-initial y/w spellings, word spacing, and apostrophe boundaries. It is cited for independently written summaries.",
+        "zh": "堪萨斯大学开放教材课程，讲解标调、ü 的拼写、零声母 y/w 拼写、词间空格和隔音符号。仅用于独立撰写的摘要。"
+      },
+      "license": "CC BY-NC 4.0; cited for independently written summaries."
+    },
+    {
       "id": "mandarin-sounds-compatibility",
       "title": {
         "en": "Mastering Mandarin Sounds",
@@ -249,7 +262,11 @@
         "pt": "{{syllable}} é uma sílaba válida, mas a marca de tom deveria estar em outra vogal. Escreva {{suggestion}}."
       },
       "examples": ["niú", "guì", "xiǎo"],
-      "sources": ["hanyu-pinyin-scheme", "ut-austin-pinyin-rules"]
+      "sources": [
+        "hanyu-pinyin-scheme",
+        "ut-austin-pinyin-rules",
+        "ku-pinyin-spelling-conventions"
+      ]
     },
     {
       "id": "multiple-tone-marks",
@@ -265,7 +282,11 @@
         "pt": "{{syllable}} tem mais de uma marca de tom escrita, mas uma sílaba em Pinyin leva apenas uma. Verifique o tom pretendido ou se falta uma fronteira silábica."
       },
       "examples": ["hǎo", "hǎò", "xǐǎo"],
-      "sources": ["hanyu-pinyin-scheme", "ut-austin-pinyin-rules"]
+      "sources": [
+        "hanyu-pinyin-scheme",
+        "ut-austin-pinyin-rules",
+        "ku-pinyin-spelling-conventions"
+      ]
     },
     {
       "id": "zero-onset-spelling",
@@ -281,7 +302,11 @@
         "pt": "Uma sílaba que começa sem consoante usa y ou w em Pinyin. Escreva {{suggestion}} em vez de {{syllable}}."
       },
       "examples": ["yi", "wo", "yue"],
-      "sources": ["hanyu-pinyin-scheme", "ut-austin-pinyin-rules"]
+      "sources": [
+        "hanyu-pinyin-scheme",
+        "ut-austin-pinyin-rules",
+        "ku-pinyin-spelling-conventions"
+      ]
     },
     {
       "id": "abbreviated-final-spelling",
@@ -313,7 +338,11 @@
         "pt": "Após j, q ou x, {{syllable}} omite os dois pontos do ü na grafia. Escreva {{suggestion}}; a vogal continua sendo pronunciada como ü."
       },
       "examples": ["ju", "qun", "xuan"],
-      "sources": ["hanyu-pinyin-scheme", "ut-austin-pinyin-rules"]
+      "sources": [
+        "hanyu-pinyin-scheme",
+        "ut-austin-pinyin-rules",
+        "ku-pinyin-spelling-conventions"
+      ]
     },
     {
       "id": "umlaut-spelling-after-y",
@@ -329,7 +358,11 @@
         "pt": "Na série de ü sem inicial consonantal, {{syllable}} omite os dois pontos do ü após y. Escreva {{suggestion}}: yü, yüe, yüan e yün são grafados yu, yue, yuan e yun."
       },
       "examples": ["yu", "yue", "yuan", "yun"],
-      "sources": ["hanyu-pinyin-scheme", "ut-austin-pinyin-rules"]
+      "sources": [
+        "hanyu-pinyin-scheme",
+        "ut-austin-pinyin-rules",
+        "ku-pinyin-spelling-conventions"
+      ]
     },
     {
       "id": "initial-final-table-mismatch",
@@ -361,7 +394,11 @@
         "pt": "{{syllable}} junta duas sílabas sem marcar a fronteira entre elas. O Pinyin do mandarim padrão insere um apóstrofo (') antes de uma sílaba que começa com a, o ou e quando ela segue outra sílaba, para que o leitor não interprete errado a fronteira. Escreva {{suggestion}}."
       },
       "examples": ["Xi'an", "nü'er", "Chang'an", "ping'an"],
-      "sources": ["ut-austin-pinyin-rules", "hanyu-pinyin-scheme"]
+      "sources": [
+        "ut-austin-pinyin-rules",
+        "hanyu-pinyin-scheme",
+        "ku-pinyin-spelling-conventions"
+      ]
     },
     {
       "id": "unnecessary-apostrophe",
@@ -377,7 +414,11 @@
         "pt": "{{syllable}} tem um apóstrofo desnecessário. No Pinyin do mandarim padrão, o apóstrofo de fronteira silábica é usado antes de uma sílaba iniciada por a, o ou e, não antes de uma sílaba iniciada por consoante. Escreva {{suggestion}}."
       },
       "examples": ["Zhōngguó", "Běijīng", "Xi'an", "nü'er"],
-      "sources": ["ut-austin-pinyin-rules", "hanyu-pinyin-scheme"]
+      "sources": [
+        "ut-austin-pinyin-rules",
+        "hanyu-pinyin-scheme",
+        "ku-pinyin-spelling-conventions"
+      ]
     },
     {
       "id": "third-tone-sandhi",
