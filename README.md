@@ -36,5 +36,3 @@ See [`AGENTS.md`](AGENTS.md) for how to run the editor locally, run the tests, a
 ## License
 
 The code in this repository is released under the [MIT License](LICENSE). The documents in [`sources/`](sources/) are third-party materials that keep their original licenses — see [`sources/README.md`](sources/README.md) for the per-file details.
-
-The favicon uses Lucide's [Languages](https://lucide.dev/icons/languages) icon, licensed under the ISC License; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
