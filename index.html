@@ -337,12 +337,12 @@
             font-size: 13px;
         }
 
-        .icon-button {
+        .button-row .icon-button {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             width: 34px;
-            padding: 0;
+            padding: 8px;
         }
 
         .icon-button svg {
@@ -353,6 +353,11 @@
             stroke-linecap: round;
             stroke-linejoin: round;
             stroke-width: 2;
+        }
+
+        .icon-button .share-icon {
+            width: 100%;
+            height: 100%;
         }
 
         button {
@@ -483,9 +488,9 @@
                 font-size: 12px;
             }
 
-            .icon-button {
+            .button-row .icon-button {
                 width: 30px;
-                padding: 0;
+                padding: 6px;
             }
         }
     </style>
@@ -524,7 +529,7 @@
         <button id="clear-btn">Clear</button>
         <button class="validation-button" id="validation-toggle" type="button" aria-pressed="true" aria-label="Pinyin checking is on">Check</button>
         <button class="validation-button" id="tone-color-toggle" type="button" aria-pressed="true" aria-label="Tone colors are on">Colors</button>
-        <button class="icon-button" id="share-btn" type="button" aria-label="Share" title="Share"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="m8.59 13.51 6.83 3.98M15.41 6.51 8.59 10.49"></path></svg></button>
+        <button class="icon-button" id="share-btn" type="button" aria-label="Share" title="Share"><svg class="share-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="m8.59 13.51 6.83 3.98M15.41 6.51 8.59 10.49"></path></svg></button>
     </div>
 
     <div class="instructions">
