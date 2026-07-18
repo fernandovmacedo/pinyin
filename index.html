@@ -243,6 +243,10 @@
             color: var(--text-secondary);
         }
 
+        .diagnostic-card .diagnostic-suggestion {
+            color: var(--text-secondary);
+        }
+
         .diagnostic-card .diagnostic-sources {
             margin-top: 10px;
             font-size: 12px;
@@ -627,6 +631,7 @@
                 compositionPrefix: 'Composition: ',
                 contrastLabel: 'Contrast',
                 sourcesLabel: 'Sources',
+                didYouMeanLabel: 'Did you mean',
             },
             pt: {
                 themeGroupLabel: 'Tema',
@@ -669,6 +674,7 @@
                 compositionPrefix: 'Composição: ',
                 contrastLabel: 'Contraste',
                 sourcesLabel: 'Fontes',
+                didYouMeanLabel: 'Você quis dizer',
             },
         };
 
@@ -1064,7 +1070,7 @@
                 }
             }
 
-            const umlautMatch = normalized.match(/^([jqx])ü(.*)$/);
+            const umlautMatch = !/[vV]/.test(run) && normalized.match(/^([jqx])ü(.*)$/);
             if (umlautMatch) {
                 const suggestionBase = umlautMatch[1] + 'u' + umlautMatch[2];
                 if (PINYIN_SYLLABLES.has(suggestionBase)) {
@@ -1076,6 +1082,53 @@
                 }
             }
             return diagnostics;
+        }
+
+        function syllableEditDistance(a, b) {
+            let previous = Array.from({ length: b.length + 1 }, (_, index) => index);
+            for (let aIndex = 0; aIndex < a.length; aIndex++) {
+                const current = [aIndex + 1];
+                for (let bIndex = 0; bIndex < b.length; bIndex++) {
+                    const substitutionCost = a[aIndex] === b[bIndex]
+                        ? 0
+                        : ((a[aIndex] === 'ü' && b[bIndex] === 'u') ||
+                           (a[aIndex] === 'u' && b[bIndex] === 'ü')) ? 0.5 : 1;
+                    current.push(Math.min(
+                        previous[bIndex + 1] + 1,
+                        current[bIndex] + 1,
+                        previous[bIndex] + substitutionCost
+                    ));
+                }
+                previous = current;
+            }
+            return previous[b.length];
+        }
+
+        function suggestNearestSyllable(spelling) {
+            const normalized = normalizePinyin(spelling);
+            if (!normalized || normalized.length > 8) {
+                return '';
+            }
+
+            const maxDistance = normalized.length <= 3 ? 1 : 2;
+            const candidates = pinyinRules.syllables
+                .filter(candidate => Math.abs(candidate.length - normalized.length) <= maxDistance)
+                .map(candidate => ({ candidate, distance: syllableEditDistance(normalized, candidate) }))
+                .filter(({ distance }) => distance <= maxDistance);
+            if (candidates.length === 0) {
+                return '';
+            }
+
+            const { initial } = getInitialAndFinal(normalized);
+            candidates.sort((first, second) =>
+                first.distance - second.distance ||
+                Number(getInitialAndFinal(second.candidate).initial === initial) -
+                    Number(getInitialAndFinal(first.candidate).initial === initial) ||
+                first.candidate.localeCompare(second.candidate)
+            );
+            const best = candidates[0].candidate;
+            const tone = Array.from(spelling, ch => lookupChar(ch) % 5).find(value => value > 0) || 0;
+            return tone ? setTone(best, tone) : best;
         }
 
         function findInvalidOffsets(run) {
@@ -1167,10 +1220,13 @@
                     index++;
                 }
                 const end = index + 1;
+                const spelling = text.substring(start, end);
                 ranges.push({
                     start,
                     end,
-                    diagnostic: diagnosticsByStart.get(start) || getDiagnostic(text.substring(start, end)),
+                    diagnostic: diagnosticsByStart.get(start) || getDiagnostic(
+                        spelling, null, suggestNearestSyllable(spelling)
+                    ),
                 });
             }
             return ranges;
@@ -1347,11 +1403,15 @@
             const localizedExplanation = rule.explanation[uiLang] || rule.explanation.en;
             const sourceById = new Map(pinyinRules.sources.map(source => [source.id, source]));
             const sources = rule.sources.map(sourceId => sourceById.get(sourceId));
+            const suggestionLine = diagnostic.suggestion && !rule.explanation.en.includes('{{suggestion}}')
+                ? `<p class="diagnostic-suggestion">${t.didYouMeanLabel} / 是不是想写: <strong>${escapeHtml(diagnostic.suggestion)}</strong>?</p>`
+                : '';
             diagnosticCard.innerHTML = `
                 <h2>${escapeHtml(localizedTitle)}</h2>
                 <div class="diagnostic-zh"><strong>${escapeHtml(rule.title.zh)}</strong></div>
                 <p>${escapeHtml(interpolate(localizedExplanation, diagnostic))}</p>
                 <p class="diagnostic-zh">${escapeHtml(interpolate(rule.explanation.zh, diagnostic))}</p>
+                ${suggestionLine}
                 <p class="diagnostic-examples">${t.contrastLabel} / 对照: ${rule.examples.map(escapeHtml).join(', ')}</p>
                 <div class="diagnostic-sources">${t.sourcesLabel} / 来源: ${sources.map(source =>
                     `<a href="${escapeHtml(source.url)}" target="_blank" rel="noreferrer">${escapeHtml(source.title[uiLang] || source.title.en)}</a>`
@@ -2355,6 +2415,23 @@
                 assertEq(ranges[0].diagnostic.suggestion, 'jún');
             });
 
+            test('Suggests the nearest valid syllable for an invalid combination', function() {
+                const ranges = getInvalidPinyinRanges('qvn');
+                assertEq(JSON.stringify(ranges.map(range => ({ start: range.start, end: range.end }))), '[{"start":0,"end":3}]');
+                assertEq(ranges[0].diagnostic.rule.id, 'palatal-final-mismatch');
+                assertEq(ranges[0].diagnostic.suggestion, 'qun');
+            });
+
+            test('Keeps the tone mark in a nearest-syllable suggestion', function() {
+                const ranges = getInvalidPinyinRanges('qǖn');
+                assertEq(ranges[0].diagnostic.suggestion, 'qūn');
+            });
+
+            test('Does not suggest a syllable for distant or overly long input', function() {
+                assertEq(getInvalidPinyinRanges('zzzzzzzzz')[0].diagnostic.suggestion, '');
+                assertEq(getInvalidPinyinRanges('xxxx')[0].diagnostic.suggestion, '');
+            });
+
             test('Paste converts tone numbers', function() {
                 editor.value = '';
                 editor.setSelectionRange(0, 0);
@@ -2390,6 +2467,7 @@
                 const ranges = getInvalidPinyinRanges('nǐ bng hǎo');
                 assertEq(JSON.stringify(ranges.map(range => ({ start: range.start, end: range.end }))), '[{"start":3,"end":6}]');
                 assertEq(ranges[0].diagnostic.rule.id, 'labial-final-mismatch');
+                assertEq(ranges[0].diagnostic.suggestion, 'bang');
             });
             test('Explains a palatal-final mismatch', function() {
                 const ranges = getInvalidPinyinRanges('jo');
@@ -2436,6 +2514,26 @@
                 editor.value = 'bng';
                 renderValidation();
                 assertEq(highlights.querySelector('.invalid-pinyin').textContent, 'bng');
+            });
+            test('Renders and round-trips a nearest-syllable suggestion in both languages', function() {
+                editor.value = 'qvn';
+                renderValidation();
+                showDiagnostic(highlights.querySelector('.invalid-pinyin'), true);
+                assertEq(diagnosticCard.textContent.includes('Did you mean'), true);
+                assertEq(diagnosticCard.textContent.includes('qun'), true);
+                assertEq(diagnosticCard.textContent.includes('是不是想写'), true);
+                setLanguage('pt');
+                showDiagnostic(highlights.querySelector('.invalid-pinyin'), true);
+                assertEq(diagnosticCard.textContent.includes('Você quis dizer'), true);
+                setLanguage('en');
+                hideDiagnostic();
+            });
+            test('Does not duplicate a suggestion already included in a rule explanation', function() {
+                editor.value = 'diou';
+                renderValidation();
+                showDiagnostic(highlights.querySelector('.invalid-pinyin'), true);
+                assertEq(diagnosticCard.textContent.includes('Did you mean'), false);
+                hideDiagnostic();
             });
             test('Places an active text selection above the validation layer', function() {
                 editor.value = 'nǐ hǎo';
