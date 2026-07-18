@@ -287,6 +287,21 @@ function syllableEditDistance(a, b) {
 }
 const SUGGESTION_CONFIDENCE_MARGIN = 0.5;
 
+// Corrections should keep the casing style of what the learner typed:
+// Uǒ -> Wǒ, QǗN -> QÚN, while lowercase input stays lowercase.
+function matchSuggestionCase(spelling, suggestion) {
+  const letters = Array.from(spelling).filter(
+    (ch) => ch.toLowerCase() !== ch.toUpperCase(),
+  );
+  if (letters.length > 0 && letters.every((ch) => ch === ch.toUpperCase())) {
+    return suggestion.toUpperCase();
+  }
+  if (letters[0] && letters[0] === letters[0].toUpperCase()) {
+    return suggestion[0].toUpperCase() + suggestion.substring(1);
+  }
+  return suggestion;
+}
+
 // Build the syllable-aware diagnostics engine from a validated rules
 // manifest (see rules/manifest.js). Everything the engine knows about
 // valid syllables and combination rules is derived once here, rather
@@ -319,6 +334,15 @@ export function createPinyinEngine(manifest) {
   const sortedInitials = manifest.rules
     .flatMap((rule) => rule.initials || [])
     .sort((first, second) => second.length - first.length);
+  const palatalUmlautSpellings = Array.from(syllables)
+    .filter((syllable) => /^[jqx]u/.test(syllable))
+    .map((syllable) => ({
+      misspelling: syllable[0] + 'ü' + syllable.substring(2),
+      suggestion: syllable,
+    }))
+    .sort(
+      (first, second) => second.misspelling.length - first.misspelling.length,
+    );
 
   function syllablesStartingAt(normalized, index) {
     return syllablesByFirstChar.get(normalized[index]) || [];
@@ -410,8 +434,11 @@ export function createPinyinEngine(manifest) {
       if (tones.length !== 1) {
         continue;
       }
-      const suggestion = setTone(segment.syllable, tones[0]);
-      if (spelling.toLowerCase() !== suggestion) {
+      const suggestion = matchSuggestionCase(
+        spelling,
+        setTone(segment.syllable, tones[0]),
+      );
+      if (spelling.toLowerCase() !== suggestion.toLowerCase()) {
         diagnostics.push({
           start: segment.start,
           end: segment.end,
@@ -429,7 +456,8 @@ export function createPinyinEngine(manifest) {
     const runTone =
       Array.from(run, (ch) => lookupChar(ch) % 5).find((value) => value > 0) ||
       0;
-    const withRunTone = (base) => (runTone ? setTone(base, runTone) : base);
+    const withRunTone = (base) =>
+      matchSuggestionCase(run, runTone ? setTone(base, runTone) : base);
     const zeroOnsetSpellings = new Map([
       ['i', 'yi'],
       ['ia', 'ya'],
@@ -493,19 +521,37 @@ export function createPinyinEngine(manifest) {
         });
       }
     }
-    const umlautMatch = !/[vV]/.test(run) && normalized.match(/^([jqx])ü(.*)$/);
-    if (umlautMatch) {
-      const suggestionBase = umlautMatch[1] + 'u' + umlautMatch[2];
-      if (syllables.has(suggestionBase)) {
+    // Unlike the other whole-run respellings above, explicit ü after j/q/x
+    // must also be recognized inside an unspaced word (xǖyào -> xūyào).
+    // Match the longest real palatal syllable at each position so the
+    // diagnostic covers only the affected syllable, not its neighbors.
+    for (let index = 0; index < normalized.length; index++) {
+      if (/[vV]/.test(run[index + 1] || '')) {
+        continue;
+      }
+      const match = palatalUmlautSpellings.find(({ misspelling }) =>
+        normalized.startsWith(misspelling, index),
+      );
+      if (match) {
+        const spelling = run.substring(index, index + match.misspelling.length);
+        const tone =
+          Array.from(spelling, (ch) => lookupChar(ch) % 5).find(
+            (value) => value > 0,
+          ) || 0;
+        const suggestion = matchSuggestionCase(
+          spelling,
+          tone ? setTone(match.suggestion, tone) : match.suggestion,
+        );
         diagnostics.push({
-          start: 0,
-          end: run.length,
+          start: index,
+          end: index + match.misspelling.length,
           diagnostic: getDiagnostic(
-            run,
+            spelling,
             'umlaut-spelling-after-palatal',
-            withRunTone(suggestionBase),
+            suggestion,
           ),
         });
+        index += match.misspelling.length - 1;
       }
     }
     return diagnostics;
@@ -547,7 +593,8 @@ export function createPinyinEngine(manifest) {
       Array.from(spelling, (ch) => lookupChar(ch) % 5).find(
         (value) => value > 0,
       ) || 0;
-    return tone ? setTone(best, tone) : best;
+    const suggestion = tone ? setTone(best, tone) : best;
+    return matchSuggestionCase(spelling, suggestion);
   }
 
   function findInvalidOffsets(run) {

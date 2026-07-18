@@ -42,7 +42,9 @@ const fixtures = [
   },
   {
     name: 'punctuation, a newline, and CJK text do not leak across run boundaries',
-    text: 'Wǒ ài Zhōngguó!\n我爱中国。 Nǐ ne?',
+    // Each boundary separates third tones, so treating any of them as a
+    // sandhi separator would produce a visible false-positive hint.
+    text: 'Tā hǎo!\nNǐ我hǎo。 Nǐ ne?',
     invalid: [],
     apostrophes: [],
     sandhi: [],
@@ -57,7 +59,14 @@ const fixtures = [
     // Incidental but correctly-derived: tǐng and kě are both written third
     // tone and adjacent, so third-tone sandhi fires independently of the
     // tone-mark bug above.
-    sandhi: [{ match: 'tǐng', spokenTone: 2, rule: 'third-tone-sandhi' }],
+    sandhi: [
+      {
+        match: 'tǐng',
+        spokenTone: 2,
+        rule: 'third-tone-sandhi',
+        suggestion: 'tíng',
+      },
+    ],
   },
   {
     name: 'a stray initial followed by a vowel-only syllable stays grouped as one diagnostic',
@@ -133,12 +142,32 @@ const fixtures = [
     invalid: [],
     apostrophes: [],
     sandhi: [
-      { match: 'Wǒ', spokenTone: 2, rule: 'third-tone-sandhi' },
-      { match: 'hěn', spokenTone: 2, rule: 'third-tone-sandhi' },
-      { match: 'Bù', spokenTone: 2, rule: 'bu-tone-sandhi' },
+      {
+        match: 'Wǒ',
+        spokenTone: 2,
+        rule: 'third-tone-sandhi',
+        suggestion: 'Wó',
+      },
+      {
+        match: 'hěn',
+        spokenTone: 2,
+        rule: 'third-tone-sandhi',
+        suggestion: 'hén',
+      },
+      {
+        match: 'Bù',
+        spokenTone: 2,
+        rule: 'bu-tone-sandhi',
+        suggestion: 'Bú',
+      },
       // The second, lowercase yī (before tiān) changes; the capitalized
       // one earlier (before the neutral-tone ge) does not.
-      { match: 'yī', spokenTone: 4, rule: 'yi-tone-sandhi' },
+      {
+        match: 'yī',
+        spokenTone: 4,
+        rule: 'yi-tone-sandhi',
+        suggestion: 'yì',
+      },
     ],
   },
   {
@@ -146,14 +175,28 @@ const fixtures = [
     text: 'Wǒmen zài gōngyuán wánr le yīdiǎnr.',
     invalid: [],
     apostrophes: [],
-    sandhi: [{ match: 'yī', spokenTone: 4, rule: 'yi-tone-sandhi' }],
+    sandhi: [
+      {
+        match: 'yī',
+        spokenTone: 4,
+        rule: 'yi-tone-sandhi',
+        suggestion: 'yì',
+      },
+    ],
   },
   {
     name: 'title case and an already-correct apostrophe: nothing to flag but the sandhi hint',
     text: "Nǐ hǎo, Xī'ān!",
     invalid: [],
     apostrophes: [],
-    sandhi: [{ match: 'Nǐ', spokenTone: 2, rule: 'third-tone-sandhi' }],
+    sandhi: [
+      {
+        match: 'Nǐ',
+        spokenTone: 2,
+        rule: 'third-tone-sandhi',
+        suggestion: 'Ní',
+      },
+    ],
   },
 
   // ── One fixture per initial-family combination rule ──────────────────
@@ -169,7 +212,14 @@ const fixtures = [
       { match: 'shǖ', rule: 'retroflex-final-mismatch', suggestion: 'shū' },
     ],
     apostrophes: [],
-    sandhi: [{ match: 'Wǒ', spokenTone: 2, rule: 'third-tone-sandhi' }],
+    sandhi: [
+      {
+        match: 'Wǒ',
+        spokenTone: 2,
+        rule: 'third-tone-sandhi',
+        suggestion: 'Wó',
+      },
+    ],
   },
   {
     name: 'dental sibilant with ü is flagged mid-word without disturbing the valid syllables around it',
@@ -213,14 +263,14 @@ const fixtures = [
     sandhi: [],
   },
   {
-    name: 'ü after a palatal mid-word falls back to the palatal combination rule',
-    // The dedicated umlaut-spelling-after-palatal check only fires when
-    // the whole run is one syllable (like the standalone qǘn fixture);
-    // embedded in xǖyào, the xǖ still gets the right family rule and the
-    // right respelling via the generic nearest-syllable path.
+    name: 'ü after a palatal gets the dedicated spelling rule inside an unspaced word',
     text: 'Wǒ xǖyào xiūxi.',
     invalid: [
-      { match: 'xǖ', rule: 'palatal-final-mismatch', suggestion: 'xū' },
+      {
+        match: 'xǖ',
+        rule: 'umlaut-spelling-after-palatal',
+        suggestion: 'xū',
+      },
     ],
     apostrophes: [],
     sandhi: [],
@@ -232,7 +282,14 @@ const fixtures = [
     text: 'Wǒ xǐhuan lvsè.',
     invalid: [],
     apostrophes: [],
-    sandhi: [{ match: 'Wǒ', spokenTone: 2, rule: 'third-tone-sandhi' }],
+    sandhi: [
+      {
+        match: 'Wǒ',
+        spokenTone: 2,
+        rule: 'third-tone-sandhi',
+        suggestion: 'Wó',
+      },
+    ],
   },
   {
     name: 'jv normalizes to jü, which is still wrong after a palatal: write ju',
@@ -255,7 +312,14 @@ const fixtures = [
       { match: 'lìu', rule: 'tone-mark-placement', suggestion: 'liù' },
     ],
     apostrophes: [],
-    sandhi: [{ match: 'bù', spokenTone: 2, rule: 'bu-tone-sandhi' }],
+    sandhi: [
+      {
+        match: 'bù',
+        spokenTone: 2,
+        rule: 'bu-tone-sandhi',
+        suggestion: 'bú',
+      },
+    ],
   },
   {
     name: 'the other two abbreviated finals (uei→ui, uen→un), each also readable as two run-together syllables',
@@ -276,7 +340,7 @@ const fixtures = [
   {
     name: 'zero-onset spelling with a u-final: uo must be written wo',
     text: 'Uǒ ài nǐ.',
-    invalid: [{ match: 'Uǒ', rule: 'zero-onset-spelling', suggestion: 'wǒ' }],
+    invalid: [{ match: 'Uǒ', rule: 'zero-onset-spelling', suggestion: 'Wǒ' }],
     apostrophes: [],
     sandhi: [],
   },
@@ -289,7 +353,14 @@ const fixtures = [
       { match: 'zh', rule: 'initial-final-table-mismatch', suggestion: '' },
     ],
     apostrophes: [],
-    sandhi: [{ match: 'Nǐ', spokenTone: 2, rule: 'third-tone-sandhi' }],
+    sandhi: [
+      {
+        match: 'Nǐ',
+        spokenTone: 2,
+        rule: 'third-tone-sandhi',
+        suggestion: 'Ní',
+      },
+    ],
   },
 
   // ── More apostrophe coverage ─────────────────────────────────────────
@@ -320,9 +391,25 @@ const fixtures = [
     invalid: [],
     apostrophes: [],
     sandhi: [
-      { match: 'Yī', spokenTone: 4, rule: 'yi-tone-sandhi' },
-      { match: 'yī', spokenTone: 4, rule: 'yi-tone-sandhi' },
-      { match: 'yī', occurrence: 1, spokenTone: 2, rule: 'yi-tone-sandhi' },
+      {
+        match: 'Yī',
+        spokenTone: 4,
+        rule: 'yi-tone-sandhi',
+        suggestion: 'Yì',
+      },
+      {
+        match: 'yī',
+        spokenTone: 4,
+        rule: 'yi-tone-sandhi',
+        suggestion: 'yì',
+      },
+      {
+        match: 'yī',
+        occurrence: 1,
+        spokenTone: 2,
+        rule: 'yi-tone-sandhi',
+        suggestion: 'yí',
+      },
     ],
   },
   {
@@ -330,7 +417,14 @@ const fixtures = [
     text: 'Zhège cài bùcuò.',
     invalid: [],
     apostrophes: [],
-    sandhi: [{ match: 'bù', spokenTone: 2, rule: 'bu-tone-sandhi' }],
+    sandhi: [
+      {
+        match: 'bù',
+        spokenTone: 2,
+        rule: 'bu-tone-sandhi',
+        suggestion: 'bú',
+      },
+    ],
   },
   {
     name: 'a chain of four third tones resolves pairwise: every syllable but the last is spoken second',
@@ -338,9 +432,24 @@ const fixtures = [
     invalid: [],
     apostrophes: [],
     sandhi: [
-      { match: 'Wǒ', spokenTone: 2, rule: 'third-tone-sandhi' },
-      { match: 'yě', spokenTone: 2, rule: 'third-tone-sandhi' },
-      { match: 'hěn', spokenTone: 2, rule: 'third-tone-sandhi' },
+      {
+        match: 'Wǒ',
+        spokenTone: 2,
+        rule: 'third-tone-sandhi',
+        suggestion: 'Wó',
+      },
+      {
+        match: 'yě',
+        spokenTone: 2,
+        rule: 'third-tone-sandhi',
+        suggestion: 'yé',
+      },
+      {
+        match: 'hěn',
+        spokenTone: 2,
+        rule: 'third-tone-sandhi',
+        suggestion: 'hén',
+      },
     ],
   },
   {
@@ -349,8 +458,18 @@ const fixtures = [
     invalid: [],
     apostrophes: [],
     sandhi: [
-      { match: 'Nǐ', spokenTone: 2, rule: 'third-tone-sandhi' },
-      { match: 'wǒ', spokenTone: 2, rule: 'third-tone-sandhi' },
+      {
+        match: 'Nǐ',
+        spokenTone: 2,
+        rule: 'third-tone-sandhi',
+        suggestion: 'Ní',
+      },
+      {
+        match: 'wǒ',
+        spokenTone: 2,
+        rule: 'third-tone-sandhi',
+        suggestion: 'wó',
+      },
     ],
   },
   {
@@ -359,8 +478,18 @@ const fixtures = [
     invalid: [],
     apostrophes: [],
     sandhi: [
-      { match: 'Nǐ', spokenTone: 2, rule: 'third-tone-sandhi' },
-      { match: 'Wǒ', spokenTone: 2, rule: 'third-tone-sandhi' },
+      {
+        match: 'Nǐ',
+        spokenTone: 2,
+        rule: 'third-tone-sandhi',
+        suggestion: 'Ní',
+      },
+      {
+        match: 'Wǒ',
+        spokenTone: 2,
+        rule: 'third-tone-sandhi',
+        suggestion: 'Wó',
+      },
     ],
   },
   {
@@ -369,9 +498,24 @@ const fixtures = [
     invalid: [],
     apostrophes: [],
     sandhi: [
-      { match: 'Xiǎo', spokenTone: 2, rule: 'third-tone-sandhi' },
-      { match: 'mǎ', spokenTone: 2, rule: 'third-tone-sandhi' },
-      { match: 'hěn', spokenTone: 2, rule: 'third-tone-sandhi' },
+      {
+        match: 'Xiǎo',
+        spokenTone: 2,
+        rule: 'third-tone-sandhi',
+        suggestion: 'Xiáo',
+      },
+      {
+        match: 'mǎ',
+        spokenTone: 2,
+        rule: 'third-tone-sandhi',
+        suggestion: 'má',
+      },
+      {
+        match: 'hěn',
+        spokenTone: 2,
+        rule: 'third-tone-sandhi',
+        suggestion: 'hén',
+      },
     ],
   },
   {
@@ -386,7 +530,14 @@ const fixtures = [
     text: 'NǏ HǍO MA?',
     invalid: [],
     apostrophes: [],
-    sandhi: [{ match: 'NǏ', spokenTone: 2, rule: 'third-tone-sandhi' }],
+    sandhi: [
+      {
+        match: 'NǏ',
+        spokenTone: 2,
+        rule: 'third-tone-sandhi',
+        suggestion: 'NÍ',
+      },
+    ],
   },
 
   // ── Everything at once ───────────────────────────────────────────────
@@ -407,13 +558,24 @@ const fixtures = [
     ],
     apostrophes: [],
     sandhi: [
-      { match: 'lǐ', spokenTone: 2, rule: 'third-tone-sandhi' },
-      { match: 'yǒu', spokenTone: 2, rule: 'third-tone-sandhi' },
+      {
+        match: 'lǐ',
+        spokenTone: 2,
+        rule: 'third-tone-sandhi',
+        suggestion: 'lí',
+      },
+      {
+        match: 'yǒu',
+        spokenTone: 2,
+        rule: 'third-tone-sandhi',
+        suggestion: 'yóu',
+      },
       {
         match: 'xǐao',
         occurrence: 1,
         spokenTone: 2,
         rule: 'third-tone-sandhi',
+        suggestion: 'xiáo',
       },
     ],
   },
@@ -465,11 +627,13 @@ for (const fixture of fixtures) {
       end: r.end,
       spokenTone: r.spokenTone,
       rule: r.diagnostic.rule.id,
+      suggestion: r.diagnostic.suggestion,
     }));
     const expectedSandhi = fixture.sandhi.map((e) => ({
       ...findRange(fixture.text, e.match, e.occurrence || 0),
       spokenTone: e.spokenTone,
       rule: e.rule,
+      suggestion: e.suggestion,
     }));
     assert.deepEqual(actualSandhi, expectedSandhi, 'getToneSandhiHints');
   });
