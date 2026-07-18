@@ -116,8 +116,8 @@ const I18N = {
     shareDone: 'Link copiado!',
     clearBtn: 'Limpar',
     checkBtn: 'Checar',
-    checkOnAria: 'A verificação de Pinyin está ativada',
-    checkOffAria: 'A verificação de Pinyin está desativada',
+    checkOnAria: 'A checagem de Pinyin está ativada',
+    checkOffAria: 'A checagem de Pinyin está desativada',
     toneColorsBtn: 'Cores',
     toneColorsOnAria: 'As cores de tom estão ativadas',
     toneColorsOffAria: 'As cores de tom estão desativadas',
@@ -129,7 +129,7 @@ const I18N = {
       'Pressione <kbd>Enter</kbd> para confirmar a sílaba atual',
       'Pressione <kbd>Escape</kbd> para cancelar a sílaba atual',
       'A tecla Backspace funciona normalmente',
-      '<strong>Verificar Pinyin</strong> sublinha sílabas inválidas; desative ao escrever texto que não seja Pinyin',
+      '<strong>Checar Pinyin</strong> sublinha sílabas inválidas; desative ao escrever texto que não seja Pinyin',
       "Um sublinhado pontilhado indica um apóstrofo ausente entre sílabas, como em <strong>hai'ou</strong>",
       'Um sublinhado azul-petróleo indica uma dica de mudança de tom (sandhi) — a sílaba é pronunciada com um tom diferente do escrito, como em <strong>nǐ hǎo</strong> (pronuncia-se <strong>ní hǎo</strong>)',
       '<strong>Cores de tom</strong> colore cada sílaba de acordo com seu tom',
@@ -285,6 +285,12 @@ const SHIFTED_COMPOSITION_LENGTH = 20;
 // linguistic content can be reviewed without changing editor behavior.
 let pinyinRules = null;
 let PINYIN_SYLLABLES = new Set();
+// Syllables grouped by their first character, and the initials list
+// pre-sorted longest-first: both are rebuilt once per rules load rather
+// than on every DP step or diagnostic lookup, since re-deriving them from
+// ~830 syllables at every text position made large pastes visibly laggy.
+let SYLLABLES_BY_FIRST_CHAR = new Map();
+let SORTED_INITIALS = [];
 const TONED_VOWEL_BASES = new Map([
   ['ā', 'a'],
   ['á', 'a'],
@@ -407,6 +413,19 @@ function loadPinyinRules(manifest) {
         PINYIN_SYLLABLES.add(syllable + 'r');
       }
     }
+    SYLLABLES_BY_FIRST_CHAR = new Map();
+    for (const syllable of PINYIN_SYLLABLES) {
+      const first = syllable[0];
+      const bucket = SYLLABLES_BY_FIRST_CHAR.get(first);
+      if (bucket) {
+        bucket.push(syllable);
+      } else {
+        SYLLABLES_BY_FIRST_CHAR.set(first, [syllable]);
+      }
+    }
+    SORTED_INITIALS = manifest.rules
+      .flatMap((rule) => rule.initials || [])
+      .sort((first, second) => second.length - first.length);
     setRulesStatus('ready');
     scheduleValidation();
     return manifest;
@@ -419,12 +438,17 @@ function loadPinyinRules(manifest) {
   }
 }
 function getInitialAndFinal(syllable) {
-  const initials = pinyinRules.rules
-    .flatMap((rule) => rule.initials || [])
-    .sort((first, second) => second.length - first.length);
   const initial =
-    initials.find((candidate) => syllable.startsWith(candidate)) || '';
+    SORTED_INITIALS.find((candidate) => syllable.startsWith(candidate)) || '';
   return { initial, final: syllable.substring(initial.length) };
+}
+// Candidate syllables worth testing at this position: only those that
+// share their first character with the text there, instead of every
+// known syllable. The three DP passes below call this once per text
+// position, so narrowing the candidate set is what keeps large pastes
+// from re-scanning the full ~830-syllable list at every character.
+function syllablesStartingAt(normalized, index) {
+  return SYLLABLES_BY_FIRST_CHAR.get(normalized[index]) || [];
 }
 function getRule(ruleId) {
   return pinyinRules.rules.find((rule) => rule.id === ruleId);
@@ -454,7 +478,7 @@ function findSyllableSegments(run) {
     if (!best[index]) {
       continue;
     }
-    for (const syllable of PINYIN_SYLLABLES) {
+    for (const syllable of syllablesStartingAt(normalized, index)) {
       if (!normalized.startsWith(syllable, index)) {
         continue;
       }
@@ -481,7 +505,7 @@ function findSpokenSyllableSegments(run) {
     if (!best[index]) {
       continue;
     }
-    for (const syllable of PINYIN_SYLLABLES) {
+    for (const syllable of syllablesStartingAt(normalized, index)) {
       if (!normalized.startsWith(syllable, index)) {
         continue;
       }
@@ -700,7 +724,7 @@ function findInvalidOffsets(run) {
     if (!best[index + 1] || skipped.score > best[index + 1].score) {
       best[index + 1] = skipped;
     }
-    for (const syllable of PINYIN_SYLLABLES) {
+    for (const syllable of syllablesStartingAt(normalized, index)) {
       if (!normalized.startsWith(syllable, index)) {
         continue;
       }

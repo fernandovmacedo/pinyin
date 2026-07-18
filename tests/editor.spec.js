@@ -1,4 +1,16 @@
+import { URL, fileURLToPath } from 'node:url';
 import { expect, test } from '@playwright/test';
+
+// AGENTS.md and README.md promise that dist/index.html works when opened
+// directly from disk, with no server and no network requests: the whole
+// point of the single-file build. Every other test here exercises the app
+// through the Vite dev server, which would never catch a packaging
+// regression (an inlined asset that isn't actually inlined, a script that
+// assumes an http(s) origin, etc.). This test opens the real committed
+// artifact via file:// instead.
+const distIndexPath = fileURLToPath(
+  new URL('../dist/index.html', import.meta.url),
+);
 
 test('converts a tone number while typing', async ({ page }) => {
   await page.goto('/');
@@ -54,6 +66,24 @@ test('copy button label recovers from a rapid repeat click', async ({
 
   await expect(copyBtn).toHaveText('Copied!');
   await expect(copyBtn).toHaveText('Copy', { timeout: 3000 });
+});
+
+test('works when opened directly from disk as a single file', async ({
+  page,
+}) => {
+  const requests = [];
+  page.on('request', (request) => requests.push(request.url()));
+
+  await page.goto(`file://${distIndexPath}`);
+
+  // The favicon, styles, script, and rules manifest must all be inlined;
+  // the only "request" for a file:// document is the navigation itself.
+  expect(requests).toEqual([`file://${distIndexPath}`]);
+
+  await expect(page.locator('#rules-status')).toBeEmpty();
+  const editor = page.locator('#editor');
+  await editor.pressSequentially('ni3');
+  await expect(editor).toHaveValue('nǐ');
 });
 
 test('diagnostic card sources link to real external URLs', async ({ page }) => {
