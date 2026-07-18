@@ -1,193 +1,163 @@
-# Rule-aware Pinyin suggestions
+# Confidence-gated Pinyin suggestions
 
 ## Goal
 
-Make invalid-syllable suggestions more useful than pure edit distance while
-remaining conservative: prefer corrections mandated by Hanyu Pinyin spelling
-rules, explain the correction through the existing diagnostic card, and avoid
-guessing when two plausible syllables are too close to call.
+Make invalid-syllable suggestions trustworthy rather than merely nearest:
+show a "Did you mean" correction only when a single valid syllable is a
+clearly better repair than every alternative, and show nothing (keeping the
+rule explanation) when several repairs are equally plausible. Corrections
+mandated by Hanyu Pinyin spelling rules stay authoritative and always win.
 
-The current implementation in `index.html` already:
+## What the code already does
 
-- recognizes explicit spelling errors for tone placement, zero initials,
-  abbreviated finals, and `ü` after `j/q/x`;
-- calculates a weighted edit-distance suggestion for other invalid ranges;
-- preserves a suggestion through `getDiagnostic`, validation rendering, and
-  the diagnostic card.
+The current implementation in `index.html` already covers more of the
+original design space than first assumed. This plan is scoped around it:
 
-This work extends the generic suggestion source rather than changing the
-`rules.json` manifest or its version.
+- `getSpellingDiagnostics` produces exact, explainable repairs for tone
+  placement, zero-onset spellings, abbreviated finals, and `ü` after
+  `j/q/x`. These own their ranges via `diagnosticsByStart` and never fall
+  through to the generic suggestion path.
+- `normalizePinyin` maps `v` → `ü`, and `syllableEditDistance` charges only
+  0.5 for a `ü` ↔ `u` substitution. Together these already implement the
+  `j/q/x` dot-omission convention as a distance weight: `qvn` and `qǖn`
+  suggest `qun`/`qūn` today, with tests locking that in.
+- `suggestNearestSyllable` rejects empty input, ranges longer than eight
+  normalized characters, and candidates beyond a length-scaled distance
+  threshold; it scans `pinyinRules.syllables` (not generated erhua forms)
+  and applies the user's tone via `setTone` only after ranking.
+
+Two ideas from the earlier draft of this plan are dropped, with reasons
+recorded in "Out of scope" below: an explicit deterministic `v`-transform
+layer (redundant where reachable, unreachable where not), and rule-aware
+scoring bonuses (the confidence guard makes them inert — see below).
 
 ## Research basis
 
-The high-confidence rewrites below are direct orthographic conventions, not
-vocabulary guesses:
-
 - The [Hanyu Pinyin Scheme (1958)](https://www.moe.gov.cn/jyb_sjzl/ziliao/A19/195802/t19580201_186000.html)
-  specifies `y`/`w` spellings for zero-initial syllables, abbreviations
-  (`iou` → `iu`, `uei` → `ui`, `uen` → `un`) after an initial, the omission of
-  `ü` dots after `j/q/x`, and apostrophes before a following `a/o/e` syllable.
-- [ISO 7098:2015](https://www.iso.org/standard/61420.html) uses that scheme as
-  the basis for Modern Standard Mandarin romanization.
-- The project source [UT Austin Pinyin Rules](sources/ut-austin-pitch-perfect-pinyin-rules.md)
-  explains the same spelling rules for learners; the existing diagnostics
-  already implement them.
-- A [Beijing Normal University publishing guide](https://pub.bnu.edu.cn/jzyg1/127880.html)
-  identifies writing `v` for `ü` as a common error and describes the `j/q/x`
-  dot-omission exception.
-- The project source [Mastering Mandarin Sounds](sources/Mastering-Mandarin-Sounds.md)
-  documents the initial–final compatibility constraints, especially the
-  i-/ü-based-final restriction for `j/q/x`.
+  specifies the `y`/`w` zero-initial spellings, the `iou`/`uei`/`uen`
+  abbreviations, `ü` dot omission after `j/q/x`, and apostrophe placement —
+  all already implemented as explicit diagnostics.
+- [ISO 7098:2015](https://www.iso.org/standard/61420.html) adopts that
+  scheme for Modern Standard Mandarin romanization.
+- The project sources [UT Austin Pinyin Rules](sources/ut-austin-pitch-perfect-pinyin-rules.md)
+  and [Mastering Mandarin Sounds](sources/Mastering-Mandarin-Sounds.md)
+  document the same conventions and the initial–final compatibility
+  constraints behind the diagnostic rules.
+
+The conservatism argument is the new part: for an input like `bng`, the
+valid syllables `bang`, `beng`, `bing`, `bong` are all one insertion away,
+share the initial, and share the final `ng`. No orthographic rule prefers
+one; only a word dictionary could. Guessing (`bang`, today's behaviour, by
+lexicographic accident) risks teaching the wrong syllable, which is worse
+for a learner tool than admitting ambiguity.
 
 ## Recommended behaviour
 
-Use a ranked candidate pipeline:
+1. Explicit spelling diagnostics keep their suggestions unchanged.
+2. The generic path keeps its weighted-Levenshtein candidate search
+   unchanged, including the `ü`/`u` half-cost.
+3. New: a confidence-margin guard. Return the best candidate only when it
+   is the sole candidate within the distance threshold, or when it beats
+   the runner-up by at least `SUGGESTION_CONFIDENCE_MARGIN` (initially
+   `0.5`, one `ü`/`u` substitution). Otherwise return `''` and let the
+   rule explanation stand alone.
 
-1. Preserve the existing explicit spelling diagnostics. They are exact,
-   explainable repairs and should always win.
-2. For a generic invalid range, generate candidates from high-confidence
-   spelling transforms before considering general edit distance.
-3. Add candidates guided by the violated initial–final rule: prioritize valid
-   syllables with the same initial, then valid syllables retaining the largest
-   useful portion of the final.
-4. Score candidates using the existing weighted Levenshtein distance plus
-   small transparent bonuses for rule-preserving candidates.
-5. Display a single suggestion only when its score beats the runner-up by a
-   conservative margin. Otherwise retain the existing rule explanation with
-   no “Did you mean” line.
+Accepted behavioural change: `bng` stops suggesting `bang` (four-way exact
+tie). `qvn` → `qun` survives: `qun` sits at distance 0.5 and the runner-up
+`qin` at 1.0, exactly the margin. `zzzzzzzzz` and `xxxx` still return `''`
+via the existing threshold.
 
-This deliberately excludes broad pronunciation-confusion mappings such as
-`n`/`l`, `n`/`ng`, and `z`/`zh`. Those patterns vary by learner and dialect;
-without a word dictionary they create ambiguous suggestions. They can be a
-separate, opt-in feature later.
+Why no rule-aware bonuses: any candidate that wins by strictly lower
+distance needs no bonus, and any candidates tied on distance are rejected
+by the guard — so a bonus could only change the outcome by overriding the
+guard, which defeats its purpose. Same-initial and shared-final signals
+also fail to separate the real ties (`bng`'s candidates share both; `jo`'s
+`ji`/`ju` share the initial). If a future case demands a bonus, it must
+stay strictly below 0.5 so it can never outrank a genuinely closer
+syllable.
 
 ## Implementation plan
 
-All implementation changes are in `index.html` unless noted.
+All changes are in `index.html`. No changes to `rules.json` or its version.
 
-### 1. Represent rule-aware candidates
+### 1. Add the margin guard to `suggestNearestSyllable`
 
-Near `syllableEditDistance` and `suggestNearestSyllable`, add small helpers:
+- Define `const SUGGESTION_CONFIDENCE_MARGIN = 0.5;` next to the function
+  so tuning is explicit and visible.
+- After filtering candidates to the distance threshold, sort by distance,
+  then lexicographically for determinism.
+- Return `''` when there is more than one candidate and
+  `candidates[1].distance - candidates[0].distance <
+  SUGGESTION_CONFIDENCE_MARGIN`.
+- Keep the existing empty/length/threshold rejections and the
+  tone-after-ranking behaviour unchanged.
 
-- `getRuleAwareSuggestionCandidates(spelling, diagnostic)` returns a map of
-  candidate base syllable to metadata such as `reason` and `bonus`.
-- `getCompatibleSyllableCandidates(normalized, diagnostic)` scans
-  `pinyinRules.syllables`, not generated erhua forms, and produces candidates
-  that preserve the input initial where practical.
-- Keep candidates normalized and apply the user’s original tone only after
-  ranking, using the existing `setTone` logic.
+### 2. Delete the same-initial tie-breaker
 
-Use a map so a candidate generated by more than one rule is retained once with
-the strongest bonus.
+The current comparator promotes same-initial candidates among equal
+distances. Under the guard, an equal-distance tie always yields `''`, so
+that tie-breaker can no longer influence any displayed suggestion — remove
+it (and its per-candidate `getInitialAndFinal` calls) rather than keep
+dead logic. The lexicographic comparison stays so the sort, and therefore
+the margin computation, is deterministic.
 
-### 2. Add only deterministic spelling transforms
+### 3. Leave the call sites alone
 
-Generate these candidates when the input form has not already been handled by
-`getSpellingDiagnostics`:
-
-- Raw `v` → `ü` after `n` or `l`: `nve` → `nüe`, `lv` → `lü`.
-- Raw `v`/`ü` in the `j/q/x` family → spelling `u`: `qvn`/`qün` → `qun`.
-- Retain the existing tone, zero-onset, abbreviation, umlaut, and apostrophe
-  routes as the primary source for their respective diagnostics. Do not create
-  duplicate card lines.
-
-The raw-`v` cases should be evaluated from the original spelling rather than
-only `normalizePinyin`, because normalization intentionally converts `v` to
-`ü` for matching.
-
-### 3. Make edit-distance ranking diagnostic-aware
-
-Refactor `suggestNearestSyllable` to accept the resolved diagnostic (or rule
-ID), so it can score candidates with these deterministic tie-breakers:
-
-- lowest weighted edit distance first;
-- a small bonus for a generated deterministic transform;
-- then a bonus for retaining the same initial, except when the diagnostic
-  specifically identifies a zero-initial spelling problem;
-- then a bonus for retaining the longest shared final suffix/prefix;
-- finally lexicographic order for deterministic output.
-
-Continue to reject empty input, ranges longer than eight normalized characters,
-and candidates outside the existing maximum-distance threshold.
-
-### 4. Add a confidence-margin guard
-
-After sorting scored candidates, calculate the difference between the best and
-second-best score.
-
-- Return the best candidate if it is the only candidate, was generated by a
-  deterministic spelling transform, or wins by the selected margin.
-- Return `''` on a near tie.
-- Keep the margin in one named constant, e.g.
-  `SUGGESTION_CONFIDENCE_MARGIN`, to make later tuning explicit.
-
-Initial tuning proposal: a deterministic transform always displays; otherwise
-require the best candidate to be at least `0.5` weighted-distance point ahead.
-The inline tests should lock down examples before changing this value.
-
-### 5. Pass the resolved diagnostic to suggestions
-
-In `getInvalidPinyinRanges`, resolve the generic diagnostic first, then call
-the suggestion helper with it and construct the final diagnostic object with
-the returned suggestion. Preserve `diagnosticsByStart` unchanged so explicit
-spelling diagnostics continue to own their own suggestions.
-
-This replaces the current one-line generic fallback with an equivalent flow:
-
-1. derive `spelling`;
-2. obtain `diagnostic = getDiagnostic(spelling)`;
-3. derive a rule-aware suggestion;
-4. assign that suggestion to the diagnostic used by the range.
-
-### 6. Keep rendering unchanged unless we expose uncertainty
-
-The existing `renderDiagnosticCard` condition already avoids duplicating a
-suggestion embedded in a rule explanation. No rendering change is required for
-the recommended one-suggestion, confidence-gated design.
-
-If a future decision is to show alternatives, extend the diagnostic payload to
-carry a small `alternatives` array and add a separate, clearly labelled card
-line. Do not overload `suggestion` with comma-separated text.
+`getInvalidPinyinRanges` already resolves each generic range with
+`diagnosticsByStart.get(start) || getDiagnostic(spelling, null,
+suggestNearestSyllable(spelling))`. The suggestion function needs no
+knowledge of the resolved diagnostic, so no refactor is required there,
+and `renderDiagnosticCard` already renders the "Did you mean" line only
+when a suggestion is present — an empty suggestion needs no rendering
+change.
 
 ## Inline tests
 
-Add tests beside the existing suggestion tests for:
+Update one existing test, keep the rest as regression anchors, and add
+coverage for both sides of the guard:
 
-1. Deterministic `v` spelling:
-   - `qvn` → `qun` with the palatal-final diagnostic;
-   - `qǖn` → `qūn` preserves tone;
-   - `nve` → `nüe` and a toned equivalent preserve tone.
-2. Rule-aware compatibility preference:
-   - an invalid `j/q/x` combination selects a valid same-initial i-/ü-family
-     candidate when it has a clear score advantage.
-3. Existing behaviours remain authoritative:
-   - `diou`, `iǒu`, `jü`, and missing-apostrophe cases retain their current
-     explicit suggestions and do not create a second suggestion line.
-4. Ambiguity guard:
-   - a deliberately near-tied generic invalid spelling yields `''`;
-   - `bng` still yields `bang` if it remains a clear deterministic winner under
-     the chosen score and tie-breaking rules.
-5. Card round trip:
-   - a high-confidence generic suggestion is present in English and Portuguese;
-   - an ambiguous candidate produces no “Did you mean” line.
+1. Update 'Marks impossible Pinyin combinations': `bng` keeps its range
+   and `labial-final-mismatch` rule, but its suggestion assertion changes
+   from `'bang'` to `''`.
+2. Keep unchanged (must still pass): `qvn` → `qun`, `qǖn` → `qūn`,
+   `zzzzzzzzz`/`xxxx` → `''`, and every explicit-diagnostic suggestion
+   test (`iou`, `iǒu`, `diōu`, `jǘn`, missing apostrophe).
+3. New ambiguity test: `jo` yields the `palatal-final-mismatch` rule with
+   suggestion `''` (`ji` and `ju` tie at distance 1).
+4. New clear-winner test: `zhonk` yields `zhong` (distance 1; every other
+   candidate is at 2 or beyond, margin 1.0).
+5. New card test: with `bng` in the editor, the diagnostic card shows the
+   rule explanation but no "Did you mean" line, in English and after
+   `setLanguage('pt')`. The existing `qvn` round-trip test continues to
+   cover the positive card path in both languages.
 
 ## Verification
 
-1. Run `npm test`; the headless browser suite must pass.
-2. Run `git diff --check`.
+1. `npm test` — the headless suite must pass, including the updated `bng`
+   expectation.
+2. `git diff --check`.
 3. Manual smoke test via `python3 -m http.server 8896`:
-   - `qvn` shows `qun` and the palatal-final explanation;
-   - `nve` shows `nüe`;
-   - `diou` has only its rule-embedded correction;
-   - a selected ambiguous spelling has the rule explanation but no guess;
-   - switch to Portuguese and verify the suggestion label.
+   - `qvn` shows `qun` with the palatal-final explanation;
+   - `bng` shows the labial-final explanation with no suggestion;
+   - `zhonk` shows `zhong`;
+   - `diou` still shows only its rule-embedded correction;
+   - switch to Portuguese and confirm both card states.
 
-## Decision retained for discussion
+## Out of scope (recorded decisions)
 
-The recommended first release shows only a single, high-confidence correction.
-If we later want to expose ambiguity, choose between:
-
-- show no correction (recommended): prioritizes trust and keeps the card
-  concise;
-- show up to two labelled alternatives: more helpful for exploration, but needs
-  a clear “possible spellings” UI and more careful ranking tests.
+- **Flagging raw `v` spellings (`nve`, `lv`).** These normalize to the
+  valid syllables `nüe`/`lü`, so they never enter the diagnostic pipeline
+  at all — `v` is an accepted input convention here, as it is in IME
+  practice. Surfacing "standard spelling uses `ü`" (the common error noted
+  in the [BNU publishing guide](https://pub.bnu.edu.cn/jzyg1/127880.html))
+  would require a new rule in `rules.json` and a new "nonstandard but
+  understood" severity tier, since these inputs are not invalid. Separate
+  feature, separate decision.
+- **Pronunciation-confusion mappings** (`n`/`l`, `n`/`ng`, `z`/`zh`).
+  Learner- and dialect-dependent; ambiguous without a word dictionary.
+  Could become an opt-in feature later.
+- **Showing labelled alternatives on a near tie.** The guard shows nothing
+  instead, prioritizing trust and card concision. If revisited, carry an
+  `alternatives` array in the diagnostic payload and render a clearly
+  labelled "possible spellings" line — do not overload `suggestion` with
+  comma-separated text.
