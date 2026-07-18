@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pinyin Typing</title>
+    <title>Pinyin</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <style>
         :root {
@@ -322,8 +322,30 @@
             display: flex;
             align-items: center;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 8px;
             margin-bottom: 30px;
+        }
+
+        .button-row button {
+            padding: 7px 12px;
+            font-size: 13px;
+        }
+
+        .icon-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 7px;
+        }
+
+        .icon-button svg {
+            width: 16px;
+            height: 16px;
+            fill: none;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 2;
         }
 
         button {
@@ -339,12 +361,6 @@
 
         button:hover {
             background: var(--accent-hover);
-        }
-
-        #copy-btn {
-            box-sizing: border-box;
-            min-width: 100px;
-            white-space: nowrap;
         }
 
         .validation-button {
@@ -446,13 +462,15 @@
 
         @media (max-width: 480px) {
             h1 {
+                margin-top: 0;
                 padding-right: 200px;
+                white-space: nowrap;
             }
         }
     </style>
 </head>
 <body>
-    <h1>Pinyin Typing</h1>
+    <h1>Pinyin</h1>
     <p class="subtitle">Type Pinyin with tone marks — just type the syllable followed by 1-4</p>
 
     <div class="header-controls">
@@ -481,11 +499,11 @@
     <div class="rules-status" id="rules-status" role="status">Loading Pinyin rules…</div>
 
     <div class="button-row">
-        <button id="copy-btn">Copy text</button>
-        <button id="share-btn">Share link</button>
+        <button id="copy-btn">Copy</button>
         <button id="clear-btn">Clear</button>
-        <button class="validation-button" id="validation-toggle" type="button" aria-pressed="true" aria-label="Pinyin checking is on">Check: On</button>
-        <button class="validation-button" id="tone-color-toggle" type="button" aria-pressed="true" aria-label="Tone colors are on">Tone colors: On</button>
+        <button class="validation-button" id="validation-toggle" type="button" aria-pressed="true" aria-label="Pinyin checking is on">Check</button>
+        <button class="validation-button" id="tone-color-toggle" type="button" aria-pressed="true" aria-label="Tone colors are on">Colors</button>
+        <button class="icon-button" id="share-btn" type="button" aria-label="Share" title="Share"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="m8.59 13.51 6.83 3.98M15.41 6.51 8.59 10.49"></path></svg></button>
     </div>
 
     <div class="instructions">
@@ -557,17 +575,15 @@
                 editorPlaceholder: 'Start typing Pinyin here...',
                 rulesLoading: 'Loading Pinyin rules…',
                 rulesError: 'Unable to load Pinyin rules. Serve this editor over HTTP and reload.',
-                copyBtn: 'Copy text',
+                copyBtn: 'Copy',
                 copyDone: 'Copied!',
-                shareBtn: 'Share link',
+                shareBtn: 'Share',
                 shareDone: 'Link copied!',
                 clearBtn: 'Clear',
-                checkOn: 'Check: On',
-                checkOff: 'Check: Off',
+                checkBtn: 'Check',
                 checkOnAria: 'Pinyin checking is on',
                 checkOffAria: 'Pinyin checking is off',
-                toneColorsOn: 'Tone colors: On',
-                toneColorsOff: 'Tone colors: Off',
+                toneColorsBtn: 'Colors',
                 toneColorsOnAria: 'Tone colors are on',
                 toneColorsOffAria: 'Tone colors are off',
                 howToUse: 'How to use',
@@ -602,17 +618,15 @@
                 editorPlaceholder: 'Comece a digitar Pinyin aqui...',
                 rulesLoading: 'Carregando regras de Pinyin…',
                 rulesError: 'Não foi possível carregar as regras de Pinyin. Sirva este editor via HTTP e recarregue a página.',
-                copyBtn: 'Copiar texto',
+                copyBtn: 'Copiar',
                 copyDone: 'Copiado!',
-                shareBtn: 'Compartilhar link',
+                shareBtn: 'Compartilhar',
                 shareDone: 'Link copiado!',
                 clearBtn: 'Limpar',
-                checkOn: 'Verificação: Ativada',
-                checkOff: 'Verificação: Desativada',
+                checkBtn: 'Verificar',
                 checkOnAria: 'A verificação de Pinyin está ativada',
                 checkOffAria: 'A verificação de Pinyin está desativada',
-                toneColorsOn: 'Cores de tom: Ativadas',
-                toneColorsOff: 'Cores de tom: Desativadas',
+                toneColorsBtn: 'Cores',
                 toneColorsOnAria: 'As cores de tom estão ativadas',
                 toneColorsOffAria: 'As cores de tom estão desativadas',
                 howToUse: 'Como usar',
@@ -680,7 +694,8 @@
             langToggle.setAttribute('title', t.langSwitchLabel);
             editor.placeholder = t.editorPlaceholder;
             copyBtn.textContent = t.copyBtn;
-            shareBtn.textContent = t.shareBtn;
+            shareBtn.setAttribute('aria-label', t.shareBtn);
+            shareBtn.setAttribute('title', t.shareBtn);
             clearBtn.textContent = t.clearBtn;
             instructionsHeading.textContent = t.howToUse;
             instructionsItems.forEach((item, i) => {
@@ -1520,7 +1535,7 @@
             pinyinValidationEnabled = enabled;
             validationToggle.setAttribute('aria-pressed', String(enabled));
             const t = I18N[uiLang];
-            validationToggle.textContent = enabled ? t.checkOn : t.checkOff;
+            validationToggle.textContent = t.checkBtn;
             validationToggle.setAttribute('aria-label', enabled ? t.checkOnAria : t.checkOffAria);
             scheduleValidation();
         }
@@ -1530,7 +1545,7 @@
             localStorage.setItem('toneColors', enabled ? 'on' : 'off');
             toneColorToggle.setAttribute('aria-pressed', String(enabled));
             const t = I18N[uiLang];
-            toneColorToggle.textContent = enabled ? t.toneColorsOn : t.toneColorsOff;
+            toneColorToggle.textContent = t.toneColorsBtn;
             toneColorToggle.setAttribute('aria-label', enabled ? t.toneColorsOnAria : t.toneColorsOffAria);
             scheduleValidation();
         }
@@ -2038,6 +2053,20 @@
 
         // Briefly replace a button's label (e.g. "Copied!") before restoring it.
         function flashButtonLabel(btn, message) {
+            if (btn.classList.contains('icon-button')) {
+                const originalContent = btn.innerHTML;
+                const originalLabel = btn.getAttribute('aria-label');
+                const originalTitle = btn.getAttribute('title');
+                btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"></path></svg>';
+                btn.setAttribute('aria-label', message);
+                btn.setAttribute('title', message);
+                setTimeout(function() {
+                    btn.innerHTML = originalContent;
+                    btn.setAttribute('aria-label', originalLabel);
+                    btn.setAttribute('title', originalTitle);
+                }, 1500);
+                return;
+            }
             const originalText = btn.textContent;
             btn.textContent = message;
             setTimeout(function() {
@@ -2380,9 +2409,9 @@
                 assertEq(validationToggle.getAttribute('aria-pressed'), 'true');
                 setPinyinValidation(false);
                 assertEq(JSON.stringify(getInvalidPinyinRanges('bng')), '[]');
-                assertEq(validationToggle.textContent, 'Check: Off');
+                assertEq(validationToggle.textContent, 'Check');
                 setPinyinValidation(true);
-                assertEq(validationToggle.textContent, 'Check: On');
+                assertEq(validationToggle.textContent, 'Check');
             });
             test('Renders an underline for invalid Pinyin', function() {
                 editor.value = 'bng';
@@ -2443,16 +2472,16 @@
 
                 toneColorToggle.click();
                 renderValidation();
-                assertEq(toneColorToggle.textContent, 'Tone colors: Off');
+                assertEq(toneColorToggle.textContent, 'Colors');
                 assertEq(highlights.querySelector('.tone-1'), null);
 
                 toneColorToggle.click();
-                assertEq(toneColorToggle.textContent, 'Tone colors: On');
+                assertEq(toneColorToggle.textContent, 'Colors');
 
                 // Leave the remaining rendering tests in their historical
                 // uncolored state; this does not affect the initial default.
                 toneColorToggle.click();
-                assertEq(toneColorToggle.textContent, 'Tone colors: Off');
+                assertEq(toneColorToggle.textContent, 'Colors');
             });
 
             // Tone sandhi hints
