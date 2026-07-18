@@ -1104,6 +1104,8 @@
             return previous[b.length];
         }
 
+        const SUGGESTION_CONFIDENCE_MARGIN = 0.5;
+
         function suggestNearestSyllable(spelling) {
             const normalized = normalizePinyin(spelling);
             if (!normalized || normalized.length > 8) {
@@ -1119,13 +1121,14 @@
                 return '';
             }
 
-            const { initial } = getInitialAndFinal(normalized);
             candidates.sort((first, second) =>
                 first.distance - second.distance ||
-                Number(getInitialAndFinal(second.candidate).initial === initial) -
-                    Number(getInitialAndFinal(first.candidate).initial === initial) ||
                 first.candidate.localeCompare(second.candidate)
             );
+            if (candidates.length > 1 &&
+                candidates[1].distance - candidates[0].distance < SUGGESTION_CONFIDENCE_MARGIN) {
+                return '';
+            }
             const best = candidates[0].candidate;
             const tone = Array.from(spelling, ch => lookupChar(ch) % 5).find(value => value > 0) || 0;
             return tone ? setTone(best, tone) : best;
@@ -2467,13 +2470,18 @@
                 const ranges = getInvalidPinyinRanges('nǐ bng hǎo');
                 assertEq(JSON.stringify(ranges.map(range => ({ start: range.start, end: range.end }))), '[{"start":3,"end":6}]');
                 assertEq(ranges[0].diagnostic.rule.id, 'labial-final-mismatch');
-                assertEq(ranges[0].diagnostic.suggestion, 'bang');
+                assertEq(ranges[0].diagnostic.suggestion, '');
             });
             test('Explains a palatal-final mismatch', function() {
                 const ranges = getInvalidPinyinRanges('jo');
                 assertEq(JSON.stringify(ranges.map(range => ({ start: range.start, end: range.end }))), '[{"start":0,"end":2}]');
                 assertEq(ranges[0].diagnostic.rule.id, 'palatal-final-mismatch');
                 assertEq(ranges[0].diagnostic.rule.sources.includes('mandarin-sounds-compatibility'), true);
+                assertEq(ranges[0].diagnostic.suggestion, '');
+            });
+            test('Suggests a clear winner when every other candidate is far off', function() {
+                const ranges = getInvalidPinyinRanges('zhonk');
+                assertEq(ranges[0].diagnostic.suggestion, 'zhong');
             });
             test('Explains a misplaced tone mark', function() {
                 const ranges = getInvalidPinyinRanges('nǐu');
@@ -2552,6 +2560,18 @@
                 assertEq(diagnosticCard.textContent.includes('Palatal-final mismatch'), true);
                 assertEq(diagnosticCard.textContent.includes('舌面音与韵母拼合不合规'), true);
                 assertEq(diagnosticCard.querySelectorAll('a').length >= 2, true);
+                hideDiagnostic();
+            });
+            test('Omits "Did you mean" when candidates tie with no clear winner', function() {
+                editor.value = 'bng';
+                renderValidation();
+                showDiagnostic(highlights.querySelector('.invalid-pinyin'), true);
+                assertEq(diagnosticCard.textContent.includes('Labial-final mismatch'), true);
+                assertEq(diagnosticCard.textContent.includes('Did you mean'), false);
+                setLanguage('pt');
+                showDiagnostic(highlights.querySelector('.invalid-pinyin'), true);
+                assertEq(diagnosticCard.textContent.includes('Você quis dizer'), false);
+                setLanguage('en');
                 hideDiagnostic();
             });
 
