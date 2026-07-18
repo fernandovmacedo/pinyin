@@ -228,6 +228,17 @@
       },
       "examples": ["bng", "ae", "mn"],
       "sources": ["hanyu-pinyin-scheme", "iso-7098"]
+    },
+    {
+      "id": "missing-apostrophe",
+      "initials": [],
+      "title": { "en": "Missing syllable-boundary apostrophe", "zh": "音节分界缺少隔音符号" },
+      "explanation": {
+        "en": "{{syllable}} strings two syllables together with no marked boundary. Standard Mandarin Pinyin inserts an apostrophe (') before a syllable that begins with a, o, or e when it follows another syllable, so the reader does not misparse the boundary. Write {{suggestion}}.",
+        "zh": "{{syllable}} 把两个音节连写在一起，没有标出分界。普通话拼音规定：当以 a、o、e 开头的音节紧跟在另一个音节后面时，需加隔音符号（'），以免读者误读音节分界。请写作 {{suggestion}}。"
+      },
+      "examples": ["Xi'an", "nü'er", "Chang'an", "ping'an"],
+      "sources": ["ut-austin-pinyin-rules", "hanyu-pinyin-scheme"]
     }
   ]
 }

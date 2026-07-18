@@ -18,6 +18,10 @@
             --accent-hover: #357abd;
             --kbd-bg: #ffffff;
             --kbd-border: #cccccc;
+            --tone-1: #2f6fed;
+            --tone-2: #1a8f5f;
+            --tone-3: #b5790a;
+            --tone-4: #8b4fd1;
         }
 
         [data-theme="light"] {
@@ -33,6 +37,10 @@
             --accent-hover: #357abd;
             --kbd-bg: #ffffff;
             --kbd-border: #cccccc;
+            --tone-1: #2f6fed;
+            --tone-2: #1a8f5f;
+            --tone-3: #b5790a;
+            --tone-4: #8b4fd1;
         }
 
         [data-theme="dark"] {
@@ -48,6 +56,10 @@
             --accent-hover: #4a8fd2;
             --kbd-bg: #3a3a3a;
             --kbd-border: #555555;
+            --tone-1: #6fa2ff;
+            --tone-2: #4fd39a;
+            --tone-3: #e0ab3d;
+            --tone-4: #c298f0;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -64,6 +76,10 @@
                 --accent-hover: #4a8fd2;
                 --kbd-bg: #3a3a3a;
                 --kbd-border: #555555;
+                --tone-1: #6fa2ff;
+                --tone-2: #4fd39a;
+                --tone-3: #e0ab3d;
+                --tone-4: #c298f0;
             }
         }
 
@@ -161,6 +177,21 @@
             text-decoration-thickness: 1.5px;
             text-underline-offset: 3px;
         }
+
+        .advisory-pinyin {
+            pointer-events: auto;
+            cursor: help;
+            text-decoration-line: underline;
+            text-decoration-style: dotted;
+            text-decoration-color: #b5790a;
+            text-decoration-thickness: 1.5px;
+            text-underline-offset: 3px;
+        }
+
+        .tone-1 { color: var(--tone-1); }
+        .tone-2 { color: var(--tone-2); }
+        .tone-3 { color: var(--tone-3); }
+        .tone-4 { color: var(--tone-4); }
 
         .diagnostic-card {
             position: fixed;
@@ -404,6 +435,7 @@
         <button id="copy-btn">Copy text</button>
         <button id="clear-btn">Clear</button>
         <button class="validation-button" id="validation-toggle" type="button" aria-pressed="true" aria-label="Pinyin checking is on">Check: On</button>
+        <button class="validation-button" id="tone-color-toggle" type="button" aria-pressed="false" aria-label="Tone colors are off">Tone colors: Off</button>
     </div>
 
     <div class="instructions">
@@ -415,6 +447,8 @@
             <li>Press <kbd>Escape</kbd> to cancel the current syllable</li>
             <li>Backspace works normally</li>
             <li><strong>Check Pinyin</strong> underlines invalid syllables; turn it off when writing non-Pinyin text</li>
+            <li>A dotted underline marks a missing apostrophe between syllables, such as <strong>Xi'an</strong></li>
+            <li><strong>Tone colors</strong> tints each syllable by its tone</li>
         </ul>
         <p><strong>Example:</strong> Type <code>Ni3 hao3! Wo3 jiao4 Li3.</code> to get <strong>Nǐ hǎo! Wǒ jiào Lǐ.</strong></p>
     </div>
@@ -483,6 +517,7 @@
         // State
         let compStart = null;  // Start index of composition, or null if not composing
         let pinyinValidationEnabled = true;
+        let toneColoringEnabled = localStorage.getItem('toneColors') === 'on';
         let validationFrame = null;
         let pinnedDiagnostic = null;
         let tooltipHideTimer = null;
@@ -491,6 +526,7 @@
         const indicator = document.getElementById('composition-indicator');
         const highlights = document.getElementById('validation-highlights');
         const validationToggle = document.getElementById('validation-toggle');
+        const toneColorToggle = document.getElementById('tone-color-toggle');
         const diagnosticCard = document.getElementById('diagnostic-card');
         const rulesStatus = document.getElementById('rules-status');
 
@@ -584,6 +620,15 @@
                 validateRulesManifest(manifest);
                 pinyinRules = manifest;
                 PINYIN_SYLLABLES = new Set(manifest.syllables);
+                // Erhua: standard Mandarin Pinyin appends r to almost any syllable
+                // to spell the retroflex diminutive (wánr, huàr). This is a
+                // generative spelling rule, not a fixed list, so it is derived
+                // here instead of being enumerated in rules.json.
+                for (const syllable of manifest.syllables) {
+                    if (syllable !== 'er') {
+                        PINYIN_SYLLABLES.add(syllable + 'r');
+                    }
+                }
                 setRulesStatus('');
                 scheduleValidation();
                 return manifest;
@@ -642,6 +687,59 @@
                 }
             }
             return best[normalized.length] || [];
+        }
+
+        // Like findSyllableSegments, but rejects a segment that would swallow
+        // two tone-marked vowels, since a real syllable carries at most one.
+        // This lets a run typed as two separate toned syllables (e.g. "xi1"
+        // then "an4", giving xīàn with no separator) be told apart from a
+        // single syllable that happens to normalize the same way (xiàn).
+        function findSpokenSyllableSegments(run) {
+            const normalized = normalizePinyin(run);
+            const isToned = Array.from(run, ch => lookupChar(ch) % 5 > 0);
+            const best = Array(normalized.length + 1).fill(null);
+            best[0] = [];
+
+            for (let index = 0; index < normalized.length; index++) {
+                if (!best[index]) {
+                    continue;
+                }
+                for (const syllable of PINYIN_SYLLABLES) {
+                    if (!normalized.startsWith(syllable, index)) {
+                        continue;
+                    }
+                    const end = index + syllable.length;
+                    const toneCount = isToned.slice(index, end).filter(Boolean).length;
+                    if (toneCount > 1) {
+                        continue;
+                    }
+                    const candidate = best[index].concat({ start: index, end, syllable });
+                    if (!best[end] || candidate.length < best[end].length) {
+                        best[end] = candidate;
+                    }
+                }
+            }
+            return best[normalized.length] || [];
+        }
+
+        // Walk text, calling callback(runStart, runEnd) for each maximal run of
+        // Pinyin characters (letters and toned vowels). Shared by every pass
+        // that scans the editor for syllable-level diagnostics.
+        function forEachPinyinRun(text, callback) {
+            let runStart = null;
+            for (let index = 0; index < text.length; index++) {
+                if (isPinyinCharacter(text[index])) {
+                    if (runStart === null) {
+                        runStart = index;
+                    }
+                } else if (runStart !== null) {
+                    callback(runStart, index);
+                    runStart = null;
+                }
+            }
+            if (runStart !== null) {
+                callback(runStart, text.length);
+            }
         }
 
         function getSpellingDiagnostics(run) {
@@ -752,13 +850,9 @@
 
             const invalid = new Set();
             const diagnosticsByStart = new Map();
-            let runStart = null;
             const compositionEnd = compStart === null ? null : editor.selectionStart;
 
-            function validateRun(end) {
-                if (runStart === null) {
-                    return;
-                }
+            forEachPinyinRun(text, (runStart, end) => {
                 const run = text.substring(runStart, end);
                 for (const spellingDiagnostic of getSpellingDiagnostics(run)) {
                     const start = runStart + spellingDiagnostic.start;
@@ -790,19 +884,7 @@
                         }
                     }
                 }
-                runStart = null;
-            }
-
-            for (let index = 0; index < text.length; index++) {
-                if (isPinyinCharacter(text[index])) {
-                    if (runStart === null) {
-                        runStart = index;
-                    }
-                } else {
-                    validateRun(index);
-                }
-            }
-            validateRun(text.length);
+            });
 
             const ranges = [];
             for (let index = 0; index < text.length; index++) {
@@ -820,6 +902,62 @@
                     diagnostic: diagnosticsByStart.get(start) || getDiagnostic(text.substring(start, end)),
                 });
             }
+            return ranges;
+        }
+
+        // Flags a syllable boundary that needs an apostrophe: a syllable
+        // beginning with a, o, or e directly following another syllable with
+        // no separator (Xian instead of Xi'an). Only fires within a run that
+        // is otherwise fully valid Pinyin and was typed as separately toned
+        // syllables, so it never overrides an actual error.
+        function getMissingApostropheDiagnostics(text) {
+            if (!pinyinValidationEnabled || !pinyinRules) {
+                return [];
+            }
+
+            const diagnostics = [];
+            forEachPinyinRun(text, (runStart, end) => {
+                const run = text.substring(runStart, end);
+                const segments = findSpokenSyllableSegments(run);
+                for (let i = 1; i < segments.length; i++) {
+                    const curr = segments[i];
+                    const firstChar = normalizePinyin(run[curr.start]);
+                    if (firstChar !== 'a' && firstChar !== 'o' && firstChar !== 'e') {
+                        continue;
+                    }
+                    const prev = segments[i - 1];
+                    const clause = run.substring(prev.start, curr.end);
+                    const suggestion = run.substring(prev.start, curr.start) + '’' + run.substring(curr.start, curr.end);
+                    diagnostics.push({
+                        start: runStart + prev.start,
+                        end: runStart + curr.end,
+                        diagnostic: getDiagnostic(clause, 'missing-apostrophe', suggestion),
+                    });
+                }
+            });
+            return diagnostics;
+        }
+
+        // Tone number (1-4) for each syllable in the text, for the optional
+        // tone-coloring toggle. Only covers runs that are fully valid Pinyin;
+        // untoned or neutral-tone syllables are left uncolored.
+        function getToneRanges(text) {
+            if (!pinyinRules) {
+                return [];
+            }
+
+            const ranges = [];
+            forEachPinyinRun(text, (runStart, end) => {
+                const run = text.substring(runStart, end);
+                for (const segment of findSyllableSegments(run)) {
+                    const spelling = run.substring(segment.start, segment.end);
+                    const tone = Array.from(spelling, ch => lookupChar(ch) % 5).find(value => value > 0);
+                    if (!tone) {
+                        continue;
+                    }
+                    ranges.push({ start: runStart + segment.start, end: runStart + segment.end, tone });
+                }
+            });
             return ranges;
         }
 
@@ -891,16 +1029,54 @@
         function renderValidation() {
             validationFrame = null;
             const text = editor.value;
-            const ranges = getInvalidPinyinRanges(text);
-            let html = '';
-            let index = 0;
+            const diagnosticRanges = [
+                ...getInvalidPinyinRanges(text).map(range => ({ ...range, severity: 'invalid' })),
+                ...getMissingApostropheDiagnostics(text).map(range => ({ ...range, severity: 'advisory' })),
+            ];
+            const toneRanges = toneColoringEnabled ? getToneRanges(text) : [];
 
-            for (const range of ranges) {
-                html += escapeHtml(text.substring(index, range.start));
-                html += `<span class="pinyin-diagnostic invalid-pinyin" data-start="${range.start}" data-end="${range.end}" data-rule-id="${escapeHtml(range.diagnostic.rule.id)}" data-suggestion="${escapeHtml(range.diagnostic.suggestion)}">${escapeHtml(text.substring(range.start, range.end))}</span>`;
-                index = range.end;
+            // Diagnostic ranges and tone ranges are drawn from independent
+            // passes and can overlap (a syllable can be both an apostrophe hint
+            // and tone-colored), so cut the text at every range boundary and
+            // decide each resulting chunk's classes independently.
+            const boundaries = new Set([0, text.length]);
+            for (const range of diagnosticRanges) {
+                boundaries.add(range.start);
+                boundaries.add(range.end);
             }
-            highlights.innerHTML = html + escapeHtml(text.substring(index));
+            for (const range of toneRanges) {
+                boundaries.add(range.start);
+                boundaries.add(range.end);
+            }
+            const points = Array.from(boundaries).sort((a, b) => a - b);
+
+            let html = '';
+            for (let i = 0; i < points.length - 1; i++) {
+                const start = points[i];
+                const end = points[i + 1];
+                if (start === end) {
+                    continue;
+                }
+                const chunk = escapeHtml(text.substring(start, end));
+                const diagnosticRange = diagnosticRanges.find(range => range.start <= start && range.end >= end);
+                const toneRange = toneRanges.find(range => range.start <= start && range.end >= end);
+                if (!diagnosticRange && !toneRange) {
+                    html += chunk;
+                    continue;
+                }
+
+                const classes = [];
+                let attrs = '';
+                if (diagnosticRange) {
+                    classes.push('pinyin-diagnostic', diagnosticRange.severity === 'advisory' ? 'advisory-pinyin' : 'invalid-pinyin');
+                    attrs = ` data-start="${diagnosticRange.start}" data-end="${diagnosticRange.end}" data-rule-id="${escapeHtml(diagnosticRange.diagnostic.rule.id)}" data-suggestion="${escapeHtml(diagnosticRange.diagnostic.suggestion)}"`;
+                }
+                if (toneRange) {
+                    classes.push(`tone-${toneRange.tone}`);
+                }
+                html += `<span class="${classes.join(' ')}"${attrs}>${chunk}</span>`;
+            }
+            highlights.innerHTML = html;
             syncValidationScroll();
         }
 
@@ -919,6 +1095,15 @@
             validationToggle.setAttribute('aria-pressed', String(enabled));
             validationToggle.textContent = `Check: ${enabled ? 'On' : 'Off'}`;
             validationToggle.setAttribute('aria-label', `Pinyin checking is ${enabled ? 'on' : 'off'}`);
+            scheduleValidation();
+        }
+
+        function setToneColoring(enabled) {
+            toneColoringEnabled = enabled;
+            localStorage.setItem('toneColors', enabled ? 'on' : 'off');
+            toneColorToggle.setAttribute('aria-pressed', String(enabled));
+            toneColorToggle.textContent = `Tone colors: ${enabled ? 'On' : 'Off'}`;
+            toneColorToggle.setAttribute('aria-label', `Tone colors are ${enabled ? 'on' : 'off'}`);
             scheduleValidation();
         }
 
@@ -1395,6 +1580,11 @@
             setPinyinValidation(!pinyinValidationEnabled);
         });
 
+        toneColorToggle.addEventListener('click', function() {
+            setToneColoring(!toneColoringEnabled);
+        });
+        setToneColoring(toneColoringEnabled);
+
         // Self-test function
         window.runSelfTests = function() {
             console.log('=== Pinyin Typing Self-Tests ===');
@@ -1534,6 +1724,12 @@
             test('Auto-segments adjacent syllables', function() {
                 assertEq(JSON.stringify(getInvalidPinyinRanges('nǐhǎo zhongguo')), '[]');
             });
+            test('Accepts erhua (r-suffixed) syllables', function() {
+                assertEq(JSON.stringify(getInvalidPinyinRanges('wánr huàr diǎnr nǎr')), '[]');
+            });
+            test('Does not double-suffix "er" itself', function() {
+                assertEq(PINYIN_SYLLABLES.has('err'), false);
+            });
             test('Marks impossible Pinyin combinations', function() {
                 const ranges = getInvalidPinyinRanges('nǐ bng hǎo');
                 assertEq(JSON.stringify(ranges.map(range => ({ start: range.start, end: range.end }))), '[{"start":3,"end":6}]');
@@ -1593,6 +1789,47 @@
                 assertEq(diagnosticCard.textContent.includes('舌面音与韵母拼合不合规'), true);
                 assertEq(diagnosticCard.querySelectorAll('a').length >= 2, true);
                 hideDiagnostic();
+            });
+
+            // Missing-apostrophe advisory
+            test('Flags a missing apostrophe between two toned syllables', function() {
+                const ranges = getMissingApostropheDiagnostics('Xīān');
+                assertEq(ranges.length, 1);
+                assertEq(ranges[0].diagnostic.rule.id, 'missing-apostrophe');
+                assertEq(ranges[0].diagnostic.suggestion, 'Xī’ān');
+            });
+            test('Does not flag a syllable-boundary already marked with an apostrophe', function() {
+                assertEq(getMissingApostropheDiagnostics('Xī’ān').length, 0);
+            });
+            test('Does not flag a single syllable that merely starts with a vowel', function() {
+                assertEq(getMissingApostropheDiagnostics('ān').length, 0);
+            });
+            test('Renders a dotted underline for a missing-apostrophe advisory', function() {
+                editor.value = 'Xīān';
+                renderValidation();
+                const advisory = highlights.querySelector('.advisory-pinyin');
+                assertEq(advisory !== null, true);
+                assertEq(highlights.textContent, 'Xīān');
+            });
+
+            // Tone coloring
+            test('Computes a tone range per syllable', function() {
+                const ranges = getToneRanges('nǐ hǎo');
+                assertEq(JSON.stringify(ranges), '[{"start":0,"end":2,"tone":3},{"start":3,"end":6,"tone":3}]');
+            });
+            test('Tone coloring is off by default and toggles on click', function() {
+                assertEq(toneColorToggle.getAttribute('aria-pressed'), 'false');
+                editor.value = 'nǐ hǎo';
+                renderValidation();
+                assertEq(highlights.querySelector('.tone-3'), null);
+
+                toneColorToggle.click();
+                renderValidation();
+                assertEq(toneColorToggle.textContent, 'Tone colors: On');
+                assertEq(highlights.querySelector('.tone-3').textContent, 'nǐ');
+
+                toneColorToggle.click();
+                assertEq(toneColorToggle.textContent, 'Tone colors: Off');
             });
 
             // No vowel in syllable (m, ng, etc.)

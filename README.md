@@ -8,7 +8,13 @@ Type a Pinyin syllable followed by `1`, `2`, `3`, or `4` to apply a tone mark. T
 
 The editor works with physical and mobile virtual keyboards. Type a syllable followed by its tone number to convert it.
 
-Pinyin checking is enabled by default and marks invalid syllables with a red wavy underline. It recognizes adjacent syllables such as `nǐhǎo`; use **Check** to turn validation off while writing non-Pinyin text. Hover an underline for a bilingual explanation, examples, and sources; click or tap it to keep the explanation open.
+Pinyin checking is enabled by default and marks invalid syllables with a red wavy underline. It recognizes adjacent syllables such as `nǐhǎo` and erhua spellings such as `wánr`; use **Check** to turn validation off while writing non-Pinyin text. Hover an underline for a bilingual explanation, examples, and sources; click or tap it to keep the explanation open.
+
+A dotted underline marks a missing apostrophe between two syllables, such as `Xian` where `Xi'an` was intended. This only fires on text typed with its own tone marks, since that is what tells `Xi'an` (two syllables) apart from `xiàn` (one).
+
+**Tone colors** is an opt-in toggle that tints each syllable by its tone number.
+
+Pasting text written with tone numbers (e.g. `Ni3 hao3! Wo3 jiao4 Li3.`) converts it the same way as typing it.
 
 ## Pinyin rules
 
