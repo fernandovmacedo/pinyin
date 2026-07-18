@@ -491,6 +491,7 @@
         <h2>How to use</h2>
         <ul>
             <li>Type a syllable followed by <kbd>1</kbd>, <kbd>2</kbd>, <kbd>3</kbd>, or <kbd>4</kbd> to add the tone mark</li>
+            <li>Place the caret on an existing syllable and press <kbd>1</kbd>–<kbd>4</kbd> to change its tone; <kbd>5</kbd> removes the mark (neutral tone)</li>
             <li>Type <kbd>v</kbd> to enter <strong>ü</strong> and <kbd>V</kbd> for <strong>Ü</strong> (type <kbd>vv</kbd> for a literal <kbd>v</kbd>)</li>
             <li>Press <kbd>Enter</kbd> to accept the current syllable</li>
             <li>Press <kbd>Escape</kbd> to cancel the current syllable</li>
@@ -564,6 +565,7 @@
                 howToUse: 'How to use',
                 li: [
                     'Type a syllable followed by <kbd>1</kbd>, <kbd>2</kbd>, <kbd>3</kbd>, or <kbd>4</kbd> to add the tone mark',
+                    'Place the caret on an existing syllable and press <kbd>1</kbd>–<kbd>4</kbd> to change its tone; <kbd>5</kbd> removes the mark (neutral tone)',
                     'Type <kbd>v</kbd> to enter <strong>ü</strong> and <kbd>V</kbd> for <strong>Ü</strong> (type <kbd>vv</kbd> for a literal <kbd>v</kbd>)',
                     'Press <kbd>Enter</kbd> to accept the current syllable',
                     'Press <kbd>Escape</kbd> to cancel the current syllable',
@@ -605,6 +607,7 @@
                 howToUse: 'Como usar',
                 li: [
                     'Digite uma sílaba seguida de <kbd>1</kbd>, <kbd>2</kbd>, <kbd>3</kbd> ou <kbd>4</kbd> para adicionar a marca de tom',
+                    'Posicione o cursor em uma sílaba existente e pressione <kbd>1</kbd>–<kbd>4</kbd> para mudar seu tom; <kbd>5</kbd> remove a marca (tom neutro)',
                     'Digite <kbd>v</kbd> para inserir <strong>ü</strong> e <kbd>V</kbd> para <strong>Ü</strong> (digite <kbd>vv</kbd> para obter um <kbd>v</kbd> literal)',
                     'Pressione <kbd>Enter</kbd> para confirmar a sílaba atual',
                     'Pressione <kbd>Escape</kbd> para cancelar a sílaba atual',
@@ -1496,6 +1499,10 @@
             // First remove existing tones
             let result = removeTone(str, vowels.first, vowels.last);
 
+            if (tone === 5) {
+                return result;
+            }
+
             // Recalculate vowels in the result (string may be different length)
             const newVowels = findLastVowels(result);
             if (!newVowels) {
@@ -1538,6 +1545,43 @@
             }
 
             return result;
+        }
+
+        // Re-tone the spoken syllable ending at the caret, if it belongs to a
+        // fully valid Pinyin run. Returns whether the digit was handled.
+        function retoneSyllableAtCaret(tone) {
+            const { value: text, selectionStart: pos, selectionEnd } = editor;
+            if (pos !== selectionEnd || pos === 0 || !isPinyinCharacter(text[pos - 1])) {
+                return false;
+            }
+
+            let runStart = pos - 1;
+            while (runStart > 0 && isPinyinCharacter(text[runStart - 1])) {
+                runStart--;
+            }
+            let runEnd = pos;
+            while (runEnd < text.length && isPinyinCharacter(text[runEnd])) {
+                runEnd++;
+            }
+
+            const run = text.substring(runStart, runEnd);
+            const segments = findSpokenSyllableSegments(run);
+            if (segments.length === 0) {
+                return false;
+            }
+
+            const caretOffset = pos - runStart;
+            const segment = segments.find(({ start, end }) => start < caretOffset && caretOffset <= end);
+            if (!segment) {
+                return false;
+            }
+
+            const original = run.substring(segment.start, segment.end);
+            const toned = setTone(original, tone);
+            if (toned !== original) {
+                replaceRange(runStart + segment.start, runStart + segment.end, toned);
+            }
+            return true;
         }
 
         // Handle the 'v' character (inserts ü, double-v for literal v). The case
@@ -1714,8 +1758,8 @@
                 return;
             }
 
-            // Handle tone digits 1-4
-            if (compStart !== null && key >= '1' && key <= '4') {
+            // Handle tone digits 1-5
+            if (compStart !== null && key >= '1' && key <= '5') {
                 e.preventDefault();
 
                 const selStart = editor.selectionStart;
@@ -1736,7 +1780,14 @@
                 return;
             }
 
-            // Handle other digits (0, 5-9) - swallow while composing
+            // Re-tone an existing syllable when no composition is active.
+            if (compStart === null && key >= '1' && key <= '5' &&
+                retoneSyllableAtCaret(Number(key))) {
+                e.preventDefault();
+                return;
+            }
+
+            // Handle other digits (0, 6-9) - swallow while composing
             if (compStart !== null && key >= '0' && key <= '9') {
                 e.preventDefault();
                 // Do nothing, just swallow the digit
@@ -1807,10 +1858,13 @@
                         shiftCompositionIfFull();
                     }
                     updateIndicator();
-                } else if (compStart !== null && key >= '1' && key <= '4') {
+                } else if (compStart !== null && key >= '1' && key <= '5') {
                     const textToTone = setTone(getCompositionText(), Number(key));
                     replaceRange(compStart, editor.selectionEnd, textToTone);
                     commitComposition();
+                } else if (compStart === null && key >= '1' && key <= '5' &&
+                    retoneSyllableAtCaret(Number(key))) {
+                    // The digit re-toned an existing syllable.
                 } else if (compStart !== null && key >= '0' && key <= '9') {
                     // Match typed input: ignore unsupported digits during composition.
                 } else if (key === 'v' || key === 'V') {
@@ -1973,6 +2027,12 @@
             test('Ü1 → Ǖ', function() {
                 assertEq(setTone('Ü', 1), 'Ǖ');
             });
+            test('hǎo re-toned to second tone → háo', function() {
+                assertEq(setTone('hǎo', 2), 'háo');
+            });
+            test('hǎo with neutral tone → hao', function() {
+                assertEq(setTone('hǎo', 5), 'hao');
+            });
 
             // Double-v escape
             test('vv → v', function() {
@@ -2003,6 +2063,65 @@
                     insertTextWithComposition(key, { commitBefore: false, commitAfter: false });
                 }
                 assertEq(editor.value, 'nǐ hǎo');
+                assertEq(compStart, null);
+            });
+            test('Re-tones the syllable at the caret', function() {
+                editor.value = 'nǐ hǎo';
+                editor.setSelectionRange(editor.value.length, editor.value.length);
+                compStart = null;
+                insertTextWithComposition('4');
+                assertEq(editor.value, 'nǐ hào');
+            });
+            test('Re-toning at a syllable boundary chooses the syllable ending there', function() {
+                editor.value = 'nǐhǎo';
+                editor.setSelectionRange(2, 2);
+                compStart = null;
+                insertTextWithComposition('2');
+                assertEq(editor.value, 'níhǎo');
+            });
+            test('Re-toning preserves spoken segmentation in adjacent syllables', function() {
+                editor.value = 'xīàn';
+                editor.setSelectionRange(editor.value.length, editor.value.length);
+                compStart = null;
+                insertTextWithComposition('1');
+                assertEq(editor.value, 'xīān');
+            });
+            test('Re-toning with 5 removes a tone mark', function() {
+                editor.value = 'hǎo';
+                editor.setSelectionRange(editor.value.length, editor.value.length);
+                compStart = null;
+                insertTextWithComposition('5');
+                assertEq(editor.value, 'hao');
+            });
+            test('Re-entering the same tone swallows the digit', function() {
+                editor.value = 'hǎo';
+                editor.setSelectionRange(editor.value.length, editor.value.length);
+                compStart = null;
+                insertTextWithComposition('3');
+                assertEq(editor.value, 'hǎo');
+            });
+            test('Inserts a digit after non-Pinyin text', function() {
+                editor.value = 'hǎo ';
+                editor.setSelectionRange(editor.value.length, editor.value.length);
+                compStart = null;
+                insertTextWithComposition('3');
+                assertEq(editor.value, 'hǎo 3');
+            });
+            test('Inserts a digit after an invalid Pinyin run', function() {
+                editor.value = 'win';
+                editor.setSelectionRange(editor.value.length, editor.value.length);
+                compStart = null;
+                insertTextWithComposition('1');
+                assertEq(editor.value, 'win1');
+            });
+            test('A fresh composition commits neutral tone with 5', function() {
+                editor.value = '';
+                editor.setSelectionRange(0, 0);
+                compStart = null;
+                for (const key of 'ma5') {
+                    insertTextWithComposition(key, { commitBefore: false, commitAfter: false });
+                }
+                assertEq(editor.value, 'ma');
                 assertEq(compStart, null);
             });
 
