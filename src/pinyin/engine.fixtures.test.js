@@ -69,6 +69,26 @@ const fixtures = [
     ],
   },
   {
+    name: 'multiple tone marks are invalid even when the same text can be read as two syllables',
+    text: 'hǎò xǐǎo',
+    invalid: [
+      { match: 'hǎò', rule: 'multiple-tone-marks', suggestion: '' },
+      { match: 'xǐǎo', rule: 'multiple-tone-marks', suggestion: '' },
+    ],
+    apostrophes: [
+      { match: 'hǎò', suggestion: "hǎ'ò" },
+      { match: 'xǐǎo', suggestion: "xǐ'ǎo" },
+    ],
+    sandhi: [
+      {
+        match: 'xǐ',
+        spokenTone: 2,
+        rule: 'third-tone-sandhi',
+        suggestion: 'xí',
+      },
+    ],
+  },
+  {
     name: 'a stray initial followed by a vowel-only syllable stays grouped as one diagnostic',
     text: 'Zhège jo hěn qíguài.',
     // suggestNearestSyllable('jo') is genuinely ambiguous (bo/mo/po/wo/yo/ju
@@ -138,9 +158,30 @@ const fixtures = [
     sandhi: [],
   },
   {
+    name: 'ü after y is corrected standalone and inside an unspaced run with tone and case preserved',
+    text: 'YǙAN, wǒyǚelái.',
+    invalid: [
+      {
+        match: 'YǙAN',
+        rule: 'umlaut-spelling-after-y',
+        suggestion: 'YUǍN',
+      },
+      {
+        match: 'yǚe',
+        rule: 'umlaut-spelling-after-y',
+        suggestion: 'yuě',
+      },
+    ],
+    apostrophes: [],
+    sandhi: [],
+  },
+  {
     name: "missing syllable-boundary apostrophes (Xi'an, nü'er) in running text",
     text: 'Wǒ qùguò Xīān. Tā yǒu yí gè nǚér.',
-    invalid: [],
+    invalid: [
+      { match: 'Xīān', rule: 'multiple-tone-marks', suggestion: '' },
+      { match: 'nǚér', rule: 'multiple-tone-marks', suggestion: '' },
+    ],
     apostrophes: [
       { match: 'Xīān', suggestion: "Xī'ān" },
       { match: 'nǚér', suggestion: "nǚ'ér" },
@@ -201,8 +242,8 @@ const fixtures = [
     ],
   },
   {
-    name: 'title case and an already-correct apostrophe: nothing to flag but the sandhi hint',
-    text: "Nǐ hǎo, Xī'ān!",
+    name: 'title case and correct apostrophes: nothing to flag but the sandhi hint',
+    text: "Nǐ hǎo, Xī'ān! Tā de nǚ'ér.",
     invalid: [],
     apostrophes: [],
     sandhi: [
@@ -272,9 +313,15 @@ const fixtures = [
     sandhi: [],
   },
   {
-    name: 'ü kept after y gets the zero-onset rule and the plain-u respelling',
+    name: 'ü kept after y gets the dedicated spelling rule and the plain-u respelling',
     text: 'Xià yǚ le.',
-    invalid: [{ match: 'yǚ', rule: 'zero-onset-mismatch', suggestion: 'yǔ' }],
+    invalid: [
+      {
+        match: 'yǚ',
+        rule: 'umlaut-spelling-after-y',
+        suggestion: 'yǔ',
+      },
+    ],
     apostrophes: [],
     sandhi: [],
   },
@@ -408,6 +455,25 @@ const fixtures = [
   },
 
   // ── More apostrophe coverage ─────────────────────────────────────────
+  {
+    name: 'unnecessary ASCII and curly apostrophes are advisory corrections',
+    text: "Zhōng'guó hé Běi’jīng.",
+    invalid: [],
+    apostrophes: [],
+    unnecessary: [
+      {
+        match: "Zhōng'guó",
+        rule: 'unnecessary-apostrophe',
+        suggestion: 'Zhōngguó',
+      },
+      {
+        match: 'Běi’jīng',
+        rule: 'unnecessary-apostrophe',
+        suggestion: 'Běijīng',
+      },
+    ],
+    sandhi: [],
+  },
   {
     name: 'missing apostrophes before o and inside a proper name; the diagnostic spans just the affected pair',
     // Tiānānmén yields one diagnostic covering Tiānān (mén starts with a
@@ -664,6 +730,25 @@ for (const fixture of fixtures) {
       actualApostrophes,
       expectedApostrophes,
       'getMissingApostropheDiagnostics',
+    );
+
+    const actualUnnecessary = engine
+      .getUnnecessaryApostropheDiagnostics(fixture.text)
+      .map((r) => ({
+        start: r.start,
+        end: r.end,
+        rule: r.diagnostic.rule.id,
+        suggestion: r.diagnostic.suggestion,
+      }));
+    const expectedUnnecessary = (fixture.unnecessary || []).map((e) => ({
+      ...findRange(fixture.text, e.match, e.occurrence || 0),
+      rule: e.rule,
+      suggestion: e.suggestion,
+    }));
+    assert.deepEqual(
+      actualUnnecessary,
+      expectedUnnecessary,
+      'getUnnecessaryApostropheDiagnostics',
     );
 
     const actualSandhi = engine.getToneSandhiHints(fixture.text).map((r) => ({

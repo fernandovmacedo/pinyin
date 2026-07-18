@@ -96,7 +96,7 @@ const I18N = {
       'Press <kbd>Escape</kbd> to cancel the current syllable',
       'Backspace works normally',
       '<strong>Check Pinyin</strong> underlines invalid syllables; turn it off when writing non-Pinyin text',
-      "A dotted underline marks a missing apostrophe between syllables, such as <strong>hai'ou</strong>",
+      "A dotted underline marks an apostrophe hint, such as a missing apostrophe in <strong>hai'ou</strong> or an unnecessary one in <strong>Zhōng'guó</strong>",
       'A teal underline marks a tone-sandhi hint — the syllable is pronounced with a different tone than written, such as <strong>nǐ hǎo</strong> (said <strong>ní hǎo</strong>)',
       '<strong>Tone colors</strong> tints each syllable by its tone',
       'Your text is saved in this browser automatically; use <strong>Share link</strong> to copy a URL that carries your current text to someone else',
@@ -141,7 +141,7 @@ const I18N = {
       'Pressione <kbd>Escape</kbd> para cancelar a sílaba atual',
       'A tecla Backspace funciona normalmente',
       '<strong>Checar Pinyin</strong> sublinha sílabas inválidas; desative ao escrever texto que não seja Pinyin',
-      "Um sublinhado pontilhado indica um apóstrofo ausente entre sílabas, como em <strong>hai'ou</strong>",
+      "Um sublinhado pontilhado indica uma dica de apóstrofo, como um apóstrofo ausente em <strong>hai'ou</strong> ou desnecessário em <strong>Zhōng'guó</strong>",
       'Um sublinhado azul-petróleo indica uma dica de mudança de tom (sandhi) — a sílaba é pronunciada com um tom diferente do escrito, como em <strong>nǐ hǎo</strong> (pronuncia-se <strong>ní hǎo</strong>)',
       '<strong>Cores de tom</strong> colore cada sílaba de acordo com seu tom',
       'Seu texto é salvo neste navegador automaticamente; use <strong>Compartilhar link</strong> para copiar uma URL que leva seu texto atual para outra pessoa',
@@ -426,6 +426,9 @@ function renderValidation() {
       : []
     ).map((range) => ({ ...range, severity: 'invalid' })),
     ...(checking ? engine.getMissingApostropheDiagnostics(text) : []).map(
+      (range) => ({ ...range, severity: 'advisory' }),
+    ),
+    ...(checking ? engine.getUnnecessaryApostropheDiagnostics(text) : []).map(
       (range) => ({ ...range, severity: 'advisory' }),
     ),
     ...sandhiHints.map((range) => ({ ...range, severity: 'sandhi' })),

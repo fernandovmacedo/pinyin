@@ -343,6 +343,15 @@ export function createPinyinEngine(manifest) {
     .sort(
       (first, second) => second.misspelling.length - first.misspelling.length,
     );
+  const yUmlautSpellings = Array.from(syllables)
+    .filter((syllable) => syllable.startsWith('yu'))
+    .map((syllable) => ({
+      misspelling: 'yü' + syllable.substring(2),
+      suggestion: syllable,
+    }))
+    .sort(
+      (first, second) => second.misspelling.length - first.misspelling.length,
+    );
   const zeroOnsetSpellings = new Map([
     ['i', 'yi'],
     ['ia', 'ya'],
@@ -488,7 +497,15 @@ export function createPinyinEngine(manifest) {
       const tones = Array.from(spelling, (ch) => lookupChar(ch) % 5).filter(
         (tone) => tone > 0,
       );
-      if (tones.length !== 1) {
+      if (tones.length > 1) {
+        diagnostics.push({
+          start: segment.start,
+          end: segment.end,
+          diagnostic: getDiagnostic(spelling, 'multiple-tone-marks'),
+        });
+        continue;
+      }
+      if (tones.length === 0) {
         continue;
       }
       const suggestion = matchSuggestionCase(
@@ -595,6 +612,32 @@ export function createPinyinEngine(manifest) {
           diagnostic: getDiagnostic(
             spelling,
             'umlaut-spelling-after-palatal',
+            respell(spelling, match.suggestion),
+          ),
+        });
+        index += match.misspelling.length - 1;
+      }
+    }
+
+    // The zero-onset ü series is written yu/yue/yuan/yun, with the dots
+    // omitted after y. Derive ordinary and Erhua misspellings from valid yu*
+    // syllables, and prefer the longest one at each position. Literal v/V
+    // input stays on the generic invalid-spelling path.
+    for (let index = 0; index < normalized.length; index++) {
+      if (/[vV]/.test(run[index + 1] || '')) {
+        continue;
+      }
+      const match = yUmlautSpellings.find(({ misspelling }) =>
+        normalized.startsWith(misspelling, index),
+      );
+      if (match) {
+        const spelling = run.substring(index, index + match.misspelling.length);
+        diagnostics.push({
+          start: index,
+          end: index + match.misspelling.length,
+          diagnostic: getDiagnostic(
+            spelling,
+            'umlaut-spelling-after-y',
             respell(spelling, match.suggestion),
           ),
         });
@@ -794,6 +837,55 @@ export function createPinyinEngine(manifest) {
     return diagnostics;
   }
 
+  // An apostrophe is only needed before a syllable beginning with a, o, or
+  // e. Flag one other apostrophe at a time when it is the sole character
+  // directly separating two otherwise valid Pinyin runs. Requiring valid
+  // spelling on both sides keeps this advisory from competing with a more
+  // fundamental spelling error.
+  function getUnnecessaryApostropheDiagnostics(text) {
+    const diagnostics = [];
+    for (let index = 0; index < text.length; index++) {
+      if (!/[\x27’‘]/.test(text[index])) {
+        continue;
+      }
+      if (
+        !isPinyinCharacter(text[index - 1] || '') ||
+        !isPinyinCharacter(text[index + 1] || '')
+      ) {
+        continue;
+      }
+      let start = index - 1;
+      while (start > 0 && isPinyinCharacter(text[start - 1])) {
+        start--;
+      }
+      let end = index + 1;
+      while (end < text.length && isPinyinCharacter(text[end])) {
+        end++;
+      }
+      const leftRun = text.substring(start, index);
+      const rightRun = text.substring(index + 1, end);
+      if (
+        findSpokenSyllableSegments(leftRun).length === 0 ||
+        findSpokenSyllableSegments(rightRun).length === 0 ||
+        getSpellingDiagnostics(leftRun).length > 0 ||
+        getSpellingDiagnostics(rightRun).length > 0
+      ) {
+        continue;
+      }
+      if (/^[aoe]/.test(normalizePinyin(rightRun))) {
+        continue;
+      }
+      const clause = text.substring(start, end);
+      const suggestion = leftRun + rightRun;
+      diagnostics.push({
+        start,
+        end,
+        diagnostic: getDiagnostic(clause, 'unnecessary-apostrophe', suggestion),
+      });
+    }
+    return diagnostics;
+  }
+
   // Tone number (1-4) for each syllable in the text, for the optional
   // tone-coloring toggle. Only covers runs that are fully valid Pinyin;
   // untoned or neutral-tone syllables are left uncolored.
@@ -918,6 +1010,7 @@ export function createPinyinEngine(manifest) {
     findInvalidOffsets,
     getInvalidPinyinRanges,
     getMissingApostropheDiagnostics,
+    getUnnecessaryApostropheDiagnostics,
     getToneRanges,
     getToneSandhiHints,
   };

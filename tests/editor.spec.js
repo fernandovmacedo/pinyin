@@ -125,3 +125,23 @@ test('diagnostic card sources link to real external URLs', async ({ page }) => {
     expect(href).toMatch(/^https?:\/\//);
   }
 });
+
+test('unnecessary apostrophe advisory exposes its rule and suggestion', async ({
+  page,
+}) => {
+  await page.goto('/');
+
+  const editor = page.locator('#editor');
+  await editor.fill("Zhōng'guó");
+
+  const advisory = page
+    .locator('.advisory-pinyin[data-rule-id="unnecessary-apostrophe"]')
+    .first();
+  await expect(advisory).toHaveAttribute('data-suggestion', 'Zhōngguó');
+  await advisory.click();
+
+  await expect(page.locator('#diagnostic-card h2')).toHaveText(
+    'Unnecessary syllable-boundary apostrophe',
+  );
+  await expect(page.locator('#diagnostic-card')).toContainText('Zhōngguó');
+});

@@ -116,12 +116,68 @@ test('does not flag a correctly toned syllable', () => {
   }
 });
 
+test('flags multiple tone marks across the whole normalized syllable with no suggestion', () => {
+  for (const spelling of ['hǎò', 'xǐǎo', 'Xīān']) {
+    const invalid = engine.getInvalidPinyinRanges(spelling);
+    assert.equal(invalid.length, 1, spelling);
+    assert.deepEqual(
+      {
+        start: invalid[0].start,
+        end: invalid[0].end,
+        rule: invalid[0].diagnostic.rule.id,
+        suggestion: invalid[0].diagnostic.suggestion,
+      },
+      {
+        start: 0,
+        end: spelling.length,
+        rule: 'multiple-tone-marks',
+        suggestion: '',
+      },
+    );
+    assert.equal(
+      engine.getMissingApostropheDiagnostics(spelling).length,
+      1,
+      `${spelling} keeps its independent two-syllable interpretation`,
+    );
+  }
+});
+
 test('suggests corrections for common misspellings', () => {
   assert.equal(engine.suggestNearestSyllable('qvn'), 'qun');
   const ie = engine
     .getSpellingDiagnostics('ie')
     .find((d) => d.diagnostic.rule.id === 'zero-onset-spelling');
   assert.equal(ie.diagnostic.suggestion, 'ye');
+});
+
+test('uses the longest yü misspelling, including Erhua, and preserves tone and case', () => {
+  const diagnostics = engine.getSpellingDiagnostics('YǙANR');
+  assert.equal(diagnostics.length, 1);
+  assert.deepEqual(
+    {
+      start: diagnostics[0].start,
+      end: diagnostics[0].end,
+      rule: diagnostics[0].diagnostic.rule.id,
+      suggestion: diagnostics[0].diagnostic.suggestion,
+    },
+    {
+      start: 0,
+      end: 'YǙANR'.length,
+      rule: 'umlaut-spelling-after-y',
+      suggestion: 'YUǍNR',
+    },
+  );
+
+  const embedded = engine.getInvalidPinyinRanges('wǒyǚelái');
+  assert.equal(embedded.length, 1);
+  assert.equal(embedded[0].diagnostic.rule.id, 'umlaut-spelling-after-y');
+  assert.equal(embedded[0].diagnostic.suggestion, 'yuě');
+});
+
+test('literal v after y stays on the generic invalid-spelling path', () => {
+  const invalid = engine.getInvalidPinyinRanges('yv');
+  assert.equal(invalid.length, 1);
+  assert.notEqual(invalid[0].diagnostic.rule.id, 'umlaut-spelling-after-y');
 });
 
 test('missing-apostrophe hint fires only when the run is spoken as two syllables', () => {
@@ -134,6 +190,56 @@ test('missing-apostrophe hint fires only when the run is spoken as two syllables
 
   // Typed as two separately-toned syllables (xi1 + an4), it must split.
   assert.equal(engine.getMissingApostropheDiagnostics('xīàn').length, 1);
+});
+
+test('unnecessary-apostrophe advice covers exactly two valid adjacent runs', () => {
+  const text = "Nǐ zài Zhōng'guó hé Běi’jīng.";
+  assert.deepEqual(
+    engine.getUnnecessaryApostropheDiagnostics(text).map((range) => ({
+      spelling: text.slice(range.start, range.end),
+      rule: range.diagnostic.rule.id,
+      suggestion: range.diagnostic.suggestion,
+    })),
+    [
+      {
+        spelling: "Zhōng'guó",
+        rule: 'unnecessary-apostrophe',
+        suggestion: 'Zhōngguó',
+      },
+      {
+        spelling: 'Běi’jīng',
+        rule: 'unnecessary-apostrophe',
+        suggestion: 'Běijīng',
+      },
+    ],
+  );
+});
+
+test('unnecessary-apostrophe advice keeps required apostrophes and rejects invalid neighbors', () => {
+  for (const spelling of ["Xī'ān", "nǚ'ér", "qvn'guó", "zhōng'jng"]) {
+    assert.deepEqual(
+      engine.getUnnecessaryApostropheDiagnostics(spelling),
+      [],
+      spelling,
+    );
+  }
+});
+
+test('unnecessary-apostrophe advice ignores leading, trailing, repeated, and mixed separators', () => {
+  for (const spelling of [
+    "'Zhōng",
+    "Zhōng'",
+    "Zhōng''guó",
+    "Zhōng’'guó",
+    "Zhōng-'guó",
+    "Zhōng 'guó",
+  ]) {
+    assert.deepEqual(
+      engine.getUnnecessaryApostropheDiagnostics(spelling),
+      [],
+      spelling,
+    );
+  }
 });
 
 function sandhiSummary(text) {
