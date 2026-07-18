@@ -55,7 +55,7 @@ and `title.en` / `title.zh`. Every rule needs `id`, `title.en` /
 `sources` array referencing known source ids. Portuguese (`pt`) titles and
 explanations are optional and fall back to English.
 
-## Build, deployment, and releases
+## Build and deployment
 
 `npm run build` writes exactly one file: `dist/index.html`. It contains the
 application scripts, styles, manifest, and favicon, with no runtime fetches.
@@ -64,5 +64,4 @@ standalone application.
 
 GitHub Actions checks formatting, linting, browser tests, and the build for
 every push and pull request. Successful pushes to `master` deploy
-`dist/index.html` to GitHub Pages. Pushing a `v*` tag publishes that same
-file as the `pinyin-typing.html` GitHub Release asset.
+`dist/index.html` to GitHub Pages.

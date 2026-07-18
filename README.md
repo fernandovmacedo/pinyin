@@ -1,9 +1,9 @@
 # Pinyin Typing
 
 No installation is needed—just visit [Pinyin Typing](https://fernandovmacedo.github.io/pinyin/) and start typing.
-You can also download `pinyin-typing.html` from a GitHub Release and open it
-directly in a browser; the application and its Pinyin rules are embedded in that
-single file.
+You can also save the page directly from that URL or open the committed
+`dist/index.html` file in a browser; the application and its Pinyin rules are
+embedded in that single file.
 
 A standalone browser editor for typing Hanyu Pinyin with tone marks: type a syllable followed by its tone number, with `v` standing in for `ü`.
 
@@ -31,7 +31,7 @@ For example, `Ni3 hao3! Wo3 jiao4 Li3 Ming2, hen3 gao1xing4 ren4shi ni3.` become
 
 ## Development
 
-See [`AGENTS.md`](AGENTS.md) for how to run the editor locally, run the tests, and how the repository is laid out. `npm run build` creates a single self-contained `dist/index.html` that can be opened directly in a browser. GitHub Actions checks every push and pull request, deploys successful `master` builds to GitHub Pages, and publishes `pinyin-typing.html` on GitHub Releases for `v*` tags.
+See [`AGENTS.md`](AGENTS.md) for how to run the editor locally, run the tests, and how the repository is laid out. `npm run build` creates a single self-contained `dist/index.html` that can be opened directly in a browser. GitHub Actions checks every push and pull request and deploys successful `master` builds to GitHub Pages.
 
 ## License
 
