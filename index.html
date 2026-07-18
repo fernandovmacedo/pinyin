@@ -275,6 +275,30 @@
             border-color: var(--accent-color);
         }
 
+        /*
+         * The textarea is transparent because the validation layer supplies
+         * its visible text. Keep its native selection transparent as well;
+         * the validation layer renders the visible selection on the same
+         * layout grid as the rest of the text.
+         */
+        #editor::selection {
+            color: transparent;
+            background-color: transparent;
+            text-shadow: none;
+        }
+
+        #editor::-moz-selection {
+            color: transparent;
+            background-color: transparent;
+            text-shadow: none;
+        }
+
+        .pinyin-selection {
+            color: #ffffff;
+            background-color: var(--accent-color);
+            text-shadow: none;
+        }
+
         .composition-indicator {
             font-size: 14px;
             color: var(--text-secondary);
@@ -1310,6 +1334,8 @@
         function renderValidation() {
             validationFrame = null;
             const text = editor.value;
+            const selectionStart = document.activeElement === editor ? editor.selectionStart : null;
+            const selectionEnd = document.activeElement === editor ? editor.selectionEnd : null;
             const sandhiHints = getToneSandhiHints(text);
             const diagnosticRanges = [
                 ...getInvalidPinyinRanges(text).map(range => ({ ...range, severity: 'invalid' })),
@@ -1340,6 +1366,10 @@
                 boundaries.add(range.start);
                 boundaries.add(range.end);
             }
+            if (selectionStart !== null && selectionStart !== selectionEnd) {
+                boundaries.add(selectionStart);
+                boundaries.add(selectionEnd);
+            }
             const points = Array.from(boundaries).sort((a, b) => a - b);
             const severityClasses = { invalid: 'invalid-pinyin', advisory: 'advisory-pinyin', sandhi: 'sandhi-pinyin' };
 
@@ -1353,7 +1383,8 @@
                 const chunk = escapeHtml(text.substring(start, end));
                 const diagnosticRange = diagnosticRanges.find(range => range.start <= start && range.end >= end);
                 const toneRange = toneRanges.find(range => range.start <= start && range.end >= end);
-                if (!diagnosticRange && !toneRange) {
+                const isSelected = selectionStart !== null && selectionStart <= start && selectionEnd >= end;
+                if (!diagnosticRange && !toneRange && !isSelected) {
                     html += chunk;
                     continue;
                 }
@@ -1366,6 +1397,9 @@
                 }
                 if (toneRange) {
                     classes.push(`tone-${toneRange.tone}`);
+                }
+                if (isSelected) {
+                    classes.push('pinyin-selection');
                 }
                 html += `<span class="${classes.join(' ')}"${attrs}>${chunk}</span>`;
             }
@@ -1831,6 +1865,8 @@
 
         // Handle selection changes (clicks, caret moves)
         function handleSelectionChange() {
+            scheduleValidation();
+
             if (compStart !== null) {
                 const selStart = editor.selectionStart;
                 const selEnd = editor.selectionEnd;
@@ -2080,6 +2116,16 @@
                 renderValidation();
                 assertEq(highlights.querySelector('.invalid-pinyin').textContent, 'bng');
             });
+            test('Places an active text selection above the validation layer', function() {
+                editor.value = 'nǐ hǎo';
+                editor.focus();
+                editor.setSelectionRange(0, 2);
+                renderValidation();
+                assertEq(highlights.querySelector('.pinyin-selection').textContent, 'nǐ');
+                editor.setSelectionRange(2, 2);
+                renderValidation();
+                assertEq(highlights.querySelector('.pinyin-selection'), null);
+            });
             test('Renders bilingual diagnostic content and sources', function() {
                 editor.value = 'jo';
                 renderValidation();
@@ -2322,6 +2368,7 @@
         editor.addEventListener('input', scheduleValidation);
         editor.addEventListener('paste', handlePaste);
         editor.addEventListener('scroll', syncValidationScroll);
+        editor.addEventListener('blur', scheduleValidation);
         editor.addEventListener('mousedown', handleMouseInteraction);
         document.addEventListener('selectionchange', handleSelectionChange);
 
