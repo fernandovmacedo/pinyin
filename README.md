@@ -14,13 +14,13 @@ A dotted underline marks a missing apostrophe between two syllables, such as `Xi
 
 **Tone colors** is an opt-in toggle that tints each syllable by its tone number.
 
-Pasting text written with tone numbers (e.g. `Ni3 hao3! Wo3 jiao4 Li3.`) converts it the same way as typing it.
+Pasting text written with tone numbers (e.g. `Ni3 hao3! Wo3 jiao4 Li3 Ming2, hen3 gao1xing4 ren4shi ni3.`) converts it the same way as typing it.
 
 ## Pinyin rules
 
 [`rules.json`](rules.json) is the single source of truth for valid syllables, teaching explanations, examples, and citations. Its rules are based on the official Hanyu Pinyin Scheme and ISO 7098, with University of Iowa compatibility lessons and UT Austin pronunciation instruction used for learner-facing guidance. The explanations are original summaries of those sources.
 
-For example, `Ni3 hao3! Wo3 jiao4 Li3.` becomes `Nǐ hǎo! Wǒ jiào Lǐ.`
+For example, `Ni3 hao3! Wo3 jiao4 Li3 Ming2, hen3 gao1xing4 ren4shi ni3.` becomes `Nǐ hǎo! Wǒ jiào Lǐ Míng, hěn gāoxìng rènshi nǐ.` ("Hello! My name is Li Ming, nice to meet you." — all four tones plus the neutral tone.)
 
 ## Run locally
 

@@ -451,7 +451,7 @@
             <li>A dotted underline marks a missing apostrophe between syllables, such as <strong>Xi'an</strong></li>
             <li><strong>Tone colors</strong> tints each syllable by its tone</li>
         </ul>
-        <p><strong>Example:</strong> Type <code>Ni3 hao3! Wo3 jiao4 Li3.</code> to get <strong>Nǐ hǎo! Wǒ jiào Lǐ.</strong></p>
+        <p><strong>Example:</strong> Type <code>Ni3 hao3! Wo3 jiao4 Li3 Ming2, hen3 gao1xing4 ren4shi ni3.</code> to get <strong>Nǐ hǎo! Wǒ jiào Lǐ Míng, hěn gāoxìng rènshi nǐ.</strong> ("Hello! My name is Li Ming, nice to meet you." — all four tones plus the neutral tone.)</p>
     </div>
 
     <aside class="diagnostic-card" id="diagnostic-card" role="dialog" aria-label="Pinyin rule explanation" aria-live="polite" hidden></aside>
@@ -1704,8 +1704,8 @@
                 editor.value = '';
                 editor.setSelectionRange(0, 0);
                 compStart = null;
-                insertPastedText('Ni3 hao3! Wo3 jiao4 Li3.');
-                assertEq(editor.value, 'Nǐ hǎo! Wǒ jiào Lǐ.');
+                insertPastedText('Ni3 hao3! Wo3 jiao4 Li3 Ming2, hen3 gao1xing4 ren4shi ni3.');
+                assertEq(editor.value, 'Nǐ hǎo! Wǒ jiào Lǐ Míng, hěn gāoxìng rènshi nǐ.');
             });
 
             test('Validates standard tone-marked Pinyin', function() {
@@ -1838,15 +1838,22 @@
                 assertEq(setTone('m', 2), 'm');
             });
 
-            // Example sentence
-            test('Example: Ni3 hao3! Wo3 jiao4 Li3.', function() {
+            // Example phrase: all four tones plus the neutral tone
+            test('Example: Ni3 hao3! Wo3 jiao4 Li3 Ming2, hen3 gao1xing4 ren4shi ni3.', function() {
                 let result = '';
                 result += setTone('Ni', 3) + ' ';
                 result += setTone('hao', 3) + '! ';
                 result += setTone('Wo', 3) + ' ';
                 result += setTone('jiao', 4) + ' ';
-                result += setTone('Li', 3) + '.';
-                assertEq(result, 'Nǐ hǎo! Wǒ jiào Lǐ.');
+                result += setTone('Li', 3) + ' ';
+                result += setTone('Ming', 2) + ', ';
+                result += setTone('hen', 3) + ' ';
+                result += setTone('gao', 1);
+                result += setTone('xing', 4) + ' ';
+                result += setTone('ren', 4);
+                result += 'shi '; // neutral tone: no digit, no diacritic
+                result += setTone('ni', 3) + '.';
+                assertEq(result, 'Nǐ hǎo! Wǒ jiào Lǐ Míng, hěn gāoxìng rènshi nǐ.');
             });
 
             // Vowel table verification
