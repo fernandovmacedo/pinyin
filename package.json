@@ -1,8 +1,23 @@
 {
   "name": "pinyin-typing",
   "private": true,
+  "type": "module",
   "license": "MIT",
   "scripts": {
-    "test": "node test-runner.mjs"
+    "build": "vite build",
+    "dev": "vite",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "test": "playwright test",
+    "test:watch": "playwright test --ui"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "eslint": "^9.39.1",
+    "prettier": "^3.8.2",
+    "vite": "^8.1.5",
+    "vite-plugin-singlefile": "^2.3.3"
   }
 }

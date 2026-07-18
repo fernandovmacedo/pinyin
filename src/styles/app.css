@@ -1,0 +1,500 @@
+:root {
+  --bg-primary: #f8f8f6;
+  --bg-secondary: #efefec;
+  --bg-tertiary: #fcfcfa;
+  --text-primary: #292927;
+  --text-secondary: #6b6b67;
+  --text-tertiary: #92928e;
+  --border-color: #dcdcd8;
+  --border-color-dark: #dcdcd8;
+  --accent-color: #58758f;
+  --accent-hover: #49657d;
+  --kbd-bg: #ffffff;
+  --kbd-border: #cccccc;
+  --tone-1: #e30000;
+  --tone-2: #02b31c;
+  --tone-3: #1510f0;
+  --tone-4: #8900bf;
+  --sandhi-hint: #0e7c86;
+}
+
+[data-theme='light'] {
+  --bg-primary: #f8f8f6;
+  --bg-secondary: #efefec;
+  --bg-tertiary: #fcfcfa;
+  --text-primary: #292927;
+  --text-secondary: #6b6b67;
+  --text-tertiary: #92928e;
+  --border-color: #dcdcd8;
+  --border-color-dark: #dcdcd8;
+  --accent-color: #58758f;
+  --accent-hover: #49657d;
+  --kbd-bg: #ffffff;
+  --kbd-border: #cccccc;
+  --tone-1: #e30000;
+  --tone-2: #02b31c;
+  --tone-3: #1510f0;
+  --tone-4: #8900bf;
+  --sandhi-hint: #0e7c86;
+}
+
+[data-theme='dark'] {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2a2a2a;
+  --bg-tertiary: #3a3a3a;
+  --text-primary: #e0e0e0;
+  --text-secondary: #888888;
+  --text-tertiary: #666666;
+  --border-color: #444444;
+  --border-color-dark: #555555;
+  --accent-color: #62809a;
+  --accent-hover: #52708a;
+  --kbd-bg: #3a3a3a;
+  --kbd-border: #555555;
+  --tone-1: #f04c4c;
+  --tone-2: #4cf064;
+  --tone-3: #6a68f3;
+  --tone-4: #c24cf0;
+  --sandhi-hint: #3fd3e0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2a2a2a;
+    --bg-tertiary: #3a3a3a;
+    --text-primary: #e0e0e0;
+    --text-secondary: #888888;
+    --text-tertiary: #666666;
+    --border-color: #444444;
+    --border-color-dark: #555555;
+    --accent-color: #62809a;
+    --accent-hover: #52708a;
+    --kbd-bg: #3a3a3a;
+    --kbd-border: #555555;
+    --tone-1: #f04c4c;
+    --tone-2: #4cf064;
+    --tone-3: #6a68f3;
+    --tone-4: #c24cf0;
+    --sandhi-hint: #3fd3e0;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+    Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+  line-height: 1.6;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  position: relative;
+}
+
+h1 {
+  font-size: 1.8rem;
+  margin: 0 0 0.5rem;
+}
+
+h1 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.instructions {
+  background: var(--bg-secondary);
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.instructions h2 {
+  font-size: 1.1rem;
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.instructions ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.instructions li {
+  margin-bottom: 5px;
+}
+
+.instructions kbd {
+  background: var(--kbd-bg);
+  border: 1px solid var(--kbd-border);
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+.editor-container {
+  position: relative;
+  margin-bottom: 8px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+}
+
+.validation-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: 8px;
+}
+
+#validation-highlights {
+  min-height: 200px;
+  padding: 15px;
+  font-family: 'Segoe UI', 'Microsoft YaHei', 'SimHei', Arial, sans-serif;
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.invalid-pinyin {
+  pointer-events: auto;
+  cursor: help;
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: #d92d20;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+
+.advisory-pinyin {
+  pointer-events: auto;
+  cursor: help;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: #b5790a;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+
+.sandhi-pinyin {
+  pointer-events: auto;
+  cursor: help;
+  text-decoration-line: underline;
+  text-decoration-style: solid;
+  text-decoration-color: var(--sandhi-hint);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+
+.tone-1 {
+  color: var(--tone-1);
+}
+.tone-2 {
+  color: var(--tone-2);
+}
+.tone-3 {
+  color: var(--tone-3);
+}
+.tone-4 {
+  color: var(--tone-4);
+}
+
+.diagnostic-card {
+  position: fixed;
+  z-index: 3;
+  width: min(360px, calc(100vw - 32px));
+  padding: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.diagnostic-card[hidden] {
+  display: none;
+}
+
+.diagnostic-card h2 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+}
+
+.diagnostic-card p {
+  margin: 8px 0;
+}
+
+.diagnostic-card .diagnostic-zh {
+  color: var(--text-secondary);
+}
+
+.diagnostic-card .diagnostic-examples {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: var(--text-secondary);
+}
+
+.diagnostic-card .diagnostic-suggestion {
+  color: var(--text-secondary);
+}
+
+.diagnostic-card .diagnostic-sources {
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.diagnostic-card a {
+  color: var(--accent-color);
+}
+
+#editor {
+  display: block;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-height: 200px;
+  font-size: 18px;
+  line-height: 1.6;
+  padding: 15px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  resize: vertical;
+  font-family: 'Segoe UI', 'Microsoft YaHei', 'SimHei', Arial, sans-serif;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--text-primary);
+}
+
+#editor:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
+/*
+         * The textarea is transparent because the validation layer supplies
+         * its visible text. Keep its native selection transparent as well;
+         * the validation layer renders the visible selection on the same
+         * layout grid as the rest of the text.
+         */
+#editor::selection {
+  color: transparent;
+  background-color: transparent;
+  text-shadow: none;
+}
+
+#editor::-moz-selection {
+  color: transparent;
+  background-color: transparent;
+  text-shadow: none;
+}
+
+.pinyin-selection {
+  color: #ffffff;
+  background-color: var(--accent-color);
+  text-shadow: none;
+}
+
+.composition-indicator {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-top: 5px;
+  min-height: 20px;
+}
+
+.rules-status {
+  min-height: 20px;
+  margin-top: 5px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.rules-status.error {
+  color: #d92d20;
+}
+
+.composition-indicator:empty,
+.rules-status:empty {
+  display: none;
+}
+
+.button-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 30px;
+}
+
+.button-row button {
+  height: 34px;
+  padding: 8px 14px;
+  font-size: 13px;
+}
+
+.button-row .icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  padding: 8px;
+}
+
+.icon-button svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.icon-button .share-icon {
+  width: 16px;
+  height: 16px;
+}
+
+button {
+  padding: 10px 20px;
+  font-size: 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: var(--accent-color);
+  color: white;
+  transition: background 0.2s;
+}
+
+button:hover {
+  background: var(--accent-hover);
+}
+
+.validation-button {
+  color: #ffffff;
+  background: #4d7658;
+  border: 1px solid #3e6047;
+  font-weight: 600;
+}
+
+.validation-button[aria-pressed='false'] {
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  font-weight: 400;
+}
+
+.validation-button:hover {
+  background: #3e6047;
+}
+
+.validation-button[aria-pressed='false']:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.validation-button:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  position: absolute;
+  top: 23px;
+  right: 20px;
+}
+
+.theme-selector {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+}
+
+.theme-button,
+.github-link {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  background: transparent;
+}
+
+.theme-button:hover,
+.theme-button[aria-pressed='true'],
+.github-link:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.theme-button:focus-visible,
+.github-link:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.theme-button svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.github-link svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+.lang-button {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 480px) {
+  h1 {
+    padding-right: 200px;
+    white-space: nowrap;
+  }
+
+  .button-row {
+    gap: 6px;
+  }
+
+  .button-row button {
+    height: 30px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .button-row .icon-button {
+    width: 30px;
+    padding: 6px;
+  }
+}

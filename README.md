@@ -1,6 +1,9 @@
 # Pinyin Typing
 
 No installation is needed—just visit [Pinyin Typing](https://fernandovmacedo.github.io/pinyin/) and start typing.
+You can also download `pinyin-typing.html` from a GitHub Release and open it
+directly in a browser; the application and its Pinyin rules are embedded in that
+single file.
 
 A standalone browser editor for typing Hanyu Pinyin with tone marks: type a syllable followed by its tone number, with `v` standing in for `ü`.
 
@@ -22,13 +25,13 @@ Your text is saved automatically in this browser and restored on your next visit
 
 ## Pinyin rules
 
-[`rules.json`](rules.json) holds the valid syllables, teaching explanations, examples, and citations. Its rules are based on the official Hanyu Pinyin Scheme and ISO 7098, with University of Iowa compatibility lessons and UT Austin pronunciation instruction used for learner-facing guidance. The explanations are original summaries of those sources, written in English, Chinese, and Portuguese.
+[`src/data/rules.json`](src/data/rules.json) holds the valid syllables, teaching explanations, examples, and citations. Its rules are based on the official Hanyu Pinyin Scheme and ISO 7098, with University of Iowa compatibility lessons and UT Austin pronunciation instruction used for learner-facing guidance. The explanations are original summaries of those sources, written in English, Chinese, and Portuguese.
 
 For example, `Ni3 hao3! Wo3 jiao4 Li3 Ming2, hen3 gao1xing4 ren4shi ni3.` becomes `Nǐ hǎo! Wǒ jiào Lǐ Míng, hěn gāoxìng rènshi nǐ.` ("Hello! My name is Li Ming, nice to meet you." — all four tones plus the neutral tone.)
 
 ## Development
 
-See [`AGENTS.md`](AGENTS.md) for how to run the editor locally, run the tests, and how the repository is laid out. GitHub Actions runs the browser tests for every push and pull request, and pushes to `master` that pass the tests deploy the site to GitHub Pages.
+See [`AGENTS.md`](AGENTS.md) for how to run the editor locally, run the tests, and how the repository is laid out. `npm run build` creates a single self-contained `dist/index.html` that can be opened directly in a browser. GitHub Actions checks every push and pull request, deploys successful `master` builds to GitHub Pages, and publishes `pinyin-typing.html` on GitHub Releases for `v*` tags.
 
 ## License
 

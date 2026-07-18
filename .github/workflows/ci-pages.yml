@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: "pages-${{ github.ref }}"
+  group: 'pages-${{ github.ref }}'
   cancel-in-progress: true
 
 jobs:
@@ -28,7 +28,12 @@ jobs:
         uses: browser-actions/setup-chrome@v1
 
       - name: Run browser tests
-        run: npm test
+        run: |
+          npm ci
+          npm run format:check
+          npm run lint
+          npm test
+          npm run build
 
   deploy:
     name: Deploy GitHub Pages
@@ -46,19 +51,50 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v6
 
-      - name: Prepare site files
+      - name: Build standalone site
         run: |
-          mkdir _site
-          cp index.html rules.json favicon.svg _site/
+          npm ci
+          npm run build
 
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: dist
 
       - name: Deploy site
         id: deployment
         uses: actions/deploy-pages@v4
+
+  release:
+    name: Publish standalone download
+    needs: test
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build standalone file
+        run: |
+          npm ci
+          npm run build
+
+      - name: Publish release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${{ github.ref_name }}" dist/index.html#pinyin-typing.html --generate-notes
