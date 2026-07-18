@@ -318,7 +318,8 @@
 
         #copy-btn {
             box-sizing: border-box;
-            width: 100px;
+            min-width: 100px;
+            white-space: nowrap;
         }
 
         .validation-button {
@@ -411,9 +412,16 @@
             fill: currentColor;
         }
 
+        .lang-button {
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
         @media (max-width: 480px) {
             h1 {
-                padding-right: 165px;
+                padding-right: 200px;
             }
         }
     </style>
@@ -434,6 +442,7 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.4 15.2A8.5 8.5 0 0 1 8.8 3.6 8.5 8.5 0 1 0 20.4 15.2Z"></path></svg>
             </button>
         </div>
+        <button class="theme-button lang-button" type="button" id="lang-toggle" aria-label="Switch to Portuguese" title="Switch to Portuguese">EN</button>
         <a class="github-link" href="https://github.com/fernandovmacedo/pinyin" target="_blank" rel="noopener noreferrer" aria-label="View the Pinyin Typing source on GitHub" title="View on GitHub">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.58 2 12.23c0 4.52 2.87 8.35 6.84 9.71.5.1.68-.22.68-.49 0-.24-.01-1.04-.01-1.89-2.78.62-3.37-1.21-3.37-1.21-.45-1.19-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.9 1.57 2.35 1.12 2.92.85.09-.67.35-1.12.64-1.38-2.22-.26-4.56-1.15-4.56-5.1 0-1.13.39-2.05 1.03-2.78-.1-.26-.45-1.32.1-2.75 0 0 .84-.28 2.75 1.06A9.23 9.23 0 0 1 12 6.88c.85 0 1.71.12 2.51.34 1.91-1.34 2.75-1.06 2.75-1.06.55 1.43.2 2.49.1 2.75.64.73 1.03 1.65 1.03 2.78 0 3.96-2.35 4.83-4.58 5.09.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.24 10.24 0 0 0 22 12.23C22 6.58 17.52 2 12 2Z"></path></svg>
         </a>
@@ -498,6 +507,160 @@
             button.addEventListener('click', function() {
                 setTheme(this.dataset.themeChoice);
             });
+        });
+
+        // UI chrome strings (English / Brazilian Portuguese). The Chinese text
+        // throughout the editor (rules.json's "zh" fields, tone examples) is not
+        // part of this table and never changes with the interface language.
+        const I18N = {
+            en: {
+                subtitle: 'Type Pinyin with tone marks — just type the syllable followed by 1-4',
+                themeGroupLabel: 'Theme',
+                themeAuto: 'Use system theme',
+                themeLight: 'Use light theme',
+                themeDark: 'Use dark theme',
+                githubLabel: 'View the Pinyin Typing source on GitHub',
+                githubTitle: 'View on GitHub',
+                langSwitchLabel: 'Switch to Portuguese',
+                editorPlaceholder: 'Start typing Pinyin here...',
+                rulesLoading: 'Loading Pinyin rules…',
+                rulesError: 'Unable to load Pinyin rules. Serve this editor over HTTP and reload.',
+                copyBtn: 'Copy text',
+                copyDone: 'Copied!',
+                clearBtn: 'Clear',
+                checkOn: 'Check: On',
+                checkOff: 'Check: Off',
+                checkOnAria: 'Pinyin checking is on',
+                checkOffAria: 'Pinyin checking is off',
+                toneColorsOn: 'Tone colors: On',
+                toneColorsOff: 'Tone colors: Off',
+                toneColorsOnAria: 'Tone colors are on',
+                toneColorsOffAria: 'Tone colors are off',
+                howToUse: 'How to use',
+                li: [
+                    'Type a syllable followed by <kbd>1</kbd>, <kbd>2</kbd>, <kbd>3</kbd>, or <kbd>4</kbd> to add the tone mark',
+                    'Type <kbd>v</kbd> to enter <strong>ü</strong> and <kbd>V</kbd> for <strong>Ü</strong> (type <kbd>vv</kbd> for a literal <kbd>v</kbd>)',
+                    'Press <kbd>Enter</kbd> to accept the current syllable',
+                    'Press <kbd>Escape</kbd> to cancel the current syllable',
+                    'Backspace works normally',
+                    '<strong>Check Pinyin</strong> underlines invalid syllables; turn it off when writing non-Pinyin text',
+                    'A dotted underline marks a missing apostrophe between syllables, such as <strong>Xi\'an</strong>',
+                    'A teal underline marks a tone-sandhi hint — the syllable is pronounced with a different tone than written, such as <strong>nǐ hǎo</strong> (said <strong>ní hǎo</strong>)',
+                    '<strong>Tone colors</strong> tints each syllable by its tone',
+                ],
+                exampleHtml: '<strong>Example:</strong> Type <code>Ni3 hao3! Wo3 jiao4 Li3 Ming2, hen3 gao1xing4 ren4shi ni3.</code> to get <strong>Nǐ hǎo! Wǒ jiào Lǐ Míng, hěn gāoxìng rènshi nǐ.</strong> ("Hello! My name is Li Ming, nice to meet you." — all four tones plus the neutral tone.)',
+                diagnosticCardLabel: 'Pinyin rule explanation',
+                compositionPrefix: 'Composition: ',
+                contrastLabel: 'Contrast',
+                sourcesLabel: 'Sources',
+            },
+            pt: {
+                subtitle: 'Digite Pinyin com marcas de tom — basta digitar a sílaba seguida de 1-4',
+                themeGroupLabel: 'Tema',
+                themeAuto: 'Usar tema do sistema',
+                themeLight: 'Usar tema claro',
+                themeDark: 'Usar tema escuro',
+                githubLabel: 'Ver o código-fonte do Pinyin Typing no GitHub',
+                githubTitle: 'Ver no GitHub',
+                langSwitchLabel: 'Mudar para inglês',
+                editorPlaceholder: 'Comece a digitar Pinyin aqui...',
+                rulesLoading: 'Carregando regras de Pinyin…',
+                rulesError: 'Não foi possível carregar as regras de Pinyin. Sirva este editor via HTTP e recarregue a página.',
+                copyBtn: 'Copiar texto',
+                copyDone: 'Copiado!',
+                clearBtn: 'Limpar',
+                checkOn: 'Verificação: Ativada',
+                checkOff: 'Verificação: Desativada',
+                checkOnAria: 'A verificação de Pinyin está ativada',
+                checkOffAria: 'A verificação de Pinyin está desativada',
+                toneColorsOn: 'Cores de tom: Ativadas',
+                toneColorsOff: 'Cores de tom: Desativadas',
+                toneColorsOnAria: 'As cores de tom estão ativadas',
+                toneColorsOffAria: 'As cores de tom estão desativadas',
+                howToUse: 'Como usar',
+                li: [
+                    'Digite uma sílaba seguida de <kbd>1</kbd>, <kbd>2</kbd>, <kbd>3</kbd> ou <kbd>4</kbd> para adicionar a marca de tom',
+                    'Digite <kbd>v</kbd> para inserir <strong>ü</strong> e <kbd>V</kbd> para <strong>Ü</strong> (digite <kbd>vv</kbd> para obter um <kbd>v</kbd> literal)',
+                    'Pressione <kbd>Enter</kbd> para confirmar a sílaba atual',
+                    'Pressione <kbd>Escape</kbd> para cancelar a sílaba atual',
+                    'A tecla Backspace funciona normalmente',
+                    '<strong>Verificar Pinyin</strong> sublinha sílabas inválidas; desative ao escrever texto que não seja Pinyin',
+                    'Um sublinhado pontilhado indica um apóstrofo ausente entre sílabas, como em <strong>Xi\'an</strong>',
+                    'Um sublinhado azul-petróleo indica uma dica de mudança de tom (sandhi) — a sílaba é pronunciada com um tom diferente do escrito, como em <strong>nǐ hǎo</strong> (pronuncia-se <strong>ní hǎo</strong>)',
+                    '<strong>Cores de tom</strong> colore cada sílaba de acordo com seu tom',
+                ],
+                exampleHtml: '<strong>Exemplo:</strong> Digite <code>Ni3 hao3! Wo3 jiao4 Li3 Ming2, hen3 gao1xing4 ren4shi ni3.</code> para obter <strong>Nǐ hǎo! Wǒ jiào Lǐ Míng, hěn gāoxìng rènshi nǐ.</strong> ("Olá! Meu nome é Li Ming, prazer em conhecê-lo." — os quatro tons mais o tom neutro.)',
+                diagnosticCardLabel: 'Explicação da regra de Pinyin',
+                compositionPrefix: 'Composição: ',
+                contrastLabel: 'Contraste',
+                sourcesLabel: 'Fontes',
+            },
+        };
+
+        const langToggle = document.getElementById('lang-toggle');
+        const subtitleEl = document.querySelector('.subtitle');
+        const themeSelectorEl = document.querySelector('.theme-selector');
+        const githubLinkEl = document.querySelector('.github-link');
+        const copyBtn = document.getElementById('copy-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const instructionsHeading = document.querySelector('.instructions h2');
+        const instructionsItems = document.querySelectorAll('.instructions li');
+        const instructionsExample = document.querySelector('.instructions p');
+
+        let uiLang = 'en';
+
+        function detectInitialLang() {
+            if (new URLSearchParams(window.location.search).has('test')) {
+                return 'en';
+            }
+            const stored = localStorage.getItem('lang');
+            if (stored === 'en' || stored === 'pt') {
+                return stored;
+            }
+            const browserLang = (navigator.language || '').toLowerCase();
+            return browserLang.startsWith('pt') ? 'pt' : 'en';
+        }
+
+        function applyLanguageStrings() {
+            const t = I18N[uiLang];
+            document.documentElement.lang = uiLang === 'pt' ? 'pt-BR' : 'en';
+            subtitleEl.textContent = t.subtitle;
+            themeSelectorEl.setAttribute('aria-label', t.themeGroupLabel);
+            document.querySelector('[data-theme-choice="auto"]').setAttribute('aria-label', t.themeAuto);
+            document.querySelector('[data-theme-choice="auto"]').setAttribute('title', t.themeAuto);
+            document.querySelector('[data-theme-choice="light"]').setAttribute('aria-label', t.themeLight);
+            document.querySelector('[data-theme-choice="light"]').setAttribute('title', t.themeLight);
+            document.querySelector('[data-theme-choice="dark"]').setAttribute('aria-label', t.themeDark);
+            document.querySelector('[data-theme-choice="dark"]').setAttribute('title', t.themeDark);
+            githubLinkEl.setAttribute('aria-label', t.githubLabel);
+            githubLinkEl.setAttribute('title', t.githubTitle);
+            langToggle.textContent = uiLang === 'pt' ? 'PT' : 'EN';
+            langToggle.setAttribute('aria-label', t.langSwitchLabel);
+            langToggle.setAttribute('title', t.langSwitchLabel);
+            editor.placeholder = t.editorPlaceholder;
+            copyBtn.textContent = t.copyBtn;
+            clearBtn.textContent = t.clearBtn;
+            instructionsHeading.textContent = t.howToUse;
+            instructionsItems.forEach((item, i) => {
+                item.innerHTML = t.li[i];
+            });
+            instructionsExample.innerHTML = t.exampleHtml;
+            diagnosticCard.setAttribute('aria-label', t.diagnosticCardLabel);
+            setRulesStatus(rulesStatusState);
+            setPinyinValidation(pinyinValidationEnabled);
+            setToneColoring(toneColoringEnabled);
+            updateIndicator();
+            hideDiagnostic();
+        }
+
+        function setLanguage(lang) {
+            uiLang = lang;
+            localStorage.setItem('lang', lang);
+            applyLanguageStrings();
+        }
+
+        langToggle.addEventListener('click', function() {
+            setLanguage(uiLang === 'pt' ? 'en' : 'pt');
         });
 
         // Vowel table: 12 rows of 5 [untoned, tone1, tone2, tone3, tone4]
@@ -621,9 +784,21 @@
             }
         }
 
-        function setRulesStatus(message, isError = false) {
-            rulesStatus.textContent = message;
-            rulesStatus.classList.toggle('error', isError);
+        let rulesStatusState = 'loading'; // 'loading' | 'ready' | 'error'
+
+        function setRulesStatus(state) {
+            rulesStatusState = state;
+            const t = I18N[uiLang];
+            if (state === 'loading') {
+                rulesStatus.textContent = t.rulesLoading;
+                rulesStatus.classList.remove('error');
+            } else if (state === 'error') {
+                rulesStatus.textContent = t.rulesError;
+                rulesStatus.classList.add('error');
+            } else {
+                rulesStatus.textContent = '';
+                rulesStatus.classList.remove('error');
+            }
         }
 
         async function loadPinyinRules() {
@@ -645,13 +820,13 @@
                         PINYIN_SYLLABLES.add(syllable + 'r');
                     }
                 }
-                setRulesStatus('');
+                setRulesStatus('ready');
                 scheduleValidation();
                 return manifest;
             } catch (error) {
                 setPinyinValidation(false);
                 validationToggle.disabled = true;
-                setRulesStatus('Unable to load Pinyin rules. Serve this editor over HTTP and reload.', true);
+                setRulesStatus('error');
                 console.error('Unable to load rules.json:', error);
                 throw error;
             }
@@ -1087,16 +1262,19 @@
 
         function renderDiagnosticCard(diagnostic) {
             const { rule } = diagnostic;
+            const t = I18N[uiLang];
+            const localizedTitle = rule.title[uiLang] || rule.title.en;
+            const localizedExplanation = rule.explanation[uiLang] || rule.explanation.en;
             const sourceById = new Map(pinyinRules.sources.map(source => [source.id, source]));
             const sources = rule.sources.map(sourceId => sourceById.get(sourceId));
             diagnosticCard.innerHTML = `
-                <h2>${escapeHtml(rule.title.en)}</h2>
+                <h2>${escapeHtml(localizedTitle)}</h2>
                 <div class="diagnostic-zh"><strong>${escapeHtml(rule.title.zh)}</strong></div>
-                <p>${escapeHtml(interpolate(rule.explanation.en, diagnostic))}</p>
+                <p>${escapeHtml(interpolate(localizedExplanation, diagnostic))}</p>
                 <p class="diagnostic-zh">${escapeHtml(interpolate(rule.explanation.zh, diagnostic))}</p>
-                <p class="diagnostic-examples">Contrast / 对照: ${rule.examples.map(escapeHtml).join(', ')}</p>
-                <div class="diagnostic-sources">Sources / 来源: ${sources.map(source =>
-                    `<a href="${escapeHtml(source.url)}" target="_blank" rel="noreferrer">${escapeHtml(source.title.en)}</a>`
+                <p class="diagnostic-examples">${t.contrastLabel} / 对照: ${rule.examples.map(escapeHtml).join(', ')}</p>
+                <div class="diagnostic-sources">${t.sourcesLabel} / 来源: ${sources.map(source =>
+                    `<a href="${escapeHtml(source.url)}" target="_blank" rel="noreferrer">${escapeHtml(source.title[uiLang] || source.title.en)}</a>`
                 ).join(' · ')}</div>
             `;
         }
@@ -1208,8 +1386,9 @@
         function setPinyinValidation(enabled) {
             pinyinValidationEnabled = enabled;
             validationToggle.setAttribute('aria-pressed', String(enabled));
-            validationToggle.textContent = `Check: ${enabled ? 'On' : 'Off'}`;
-            validationToggle.setAttribute('aria-label', `Pinyin checking is ${enabled ? 'on' : 'off'}`);
+            const t = I18N[uiLang];
+            validationToggle.textContent = enabled ? t.checkOn : t.checkOff;
+            validationToggle.setAttribute('aria-label', enabled ? t.checkOnAria : t.checkOffAria);
             scheduleValidation();
         }
 
@@ -1217,8 +1396,9 @@
             toneColoringEnabled = enabled;
             localStorage.setItem('toneColors', enabled ? 'on' : 'off');
             toneColorToggle.setAttribute('aria-pressed', String(enabled));
-            toneColorToggle.textContent = `Tone colors: ${enabled ? 'On' : 'Off'}`;
-            toneColorToggle.setAttribute('aria-label', `Tone colors are ${enabled ? 'on' : 'off'}`);
+            const t = I18N[uiLang];
+            toneColorToggle.textContent = enabled ? t.toneColorsOn : t.toneColorsOff;
+            toneColorToggle.setAttribute('aria-label', enabled ? t.toneColorsOnAria : t.toneColorsOffAria);
             scheduleValidation();
         }
 
@@ -1354,7 +1534,7 @@
                 return;
             }
             const text = getCompositionText();
-            indicator.textContent = 'Composition: ' + text;
+            indicator.textContent = I18N[uiLang].compositionPrefix + text;
             scheduleValidation();
         }
 
@@ -1675,7 +1855,7 @@
             navigator.clipboard.writeText(editor.value).then(function() {
                 const btn = document.getElementById('copy-btn');
                 const originalText = btn.textContent;
-                btn.textContent = 'Copied!';
+                btn.textContent = I18N[uiLang].copyDone;
                 setTimeout(function() {
                     btn.textContent = originalText;
                 }, 1500);
@@ -1699,6 +1879,10 @@
             setToneColoring(!toneColoringEnabled);
         });
         setToneColoring(toneColoringEnabled);
+
+        // Detect the interface language (stored preference, else browser locale,
+        // defaulting to English) and apply it to the chrome strings above.
+        setLanguage(detectInitialLang());
 
         // Self-test function
         window.runSelfTests = function() {
@@ -2034,6 +2218,33 @@
                 assertEq(diagnosticCard.textContent.includes('ní'), true);
                 assertEq(diagnosticCard.querySelectorAll('a').length >= 2, true);
                 hideDiagnostic();
+            });
+
+            // Language switcher
+            test('Defaults to English chrome strings under ?test', function() {
+                assertEq(uiLang, 'en');
+                assertEq(subtitleEl.textContent, I18N.en.subtitle);
+            });
+            test('Clicking the language toggle switches chrome strings and persists the choice', function() {
+                langToggle.click();
+                assertEq(uiLang, 'pt');
+                assertEq(subtitleEl.textContent, I18N.pt.subtitle);
+                assertEq(document.documentElement.lang, 'pt-BR');
+                assertEq(localStorage.getItem('lang'), 'pt');
+                langToggle.click();
+                assertEq(uiLang, 'en');
+                assertEq(subtitleEl.textContent, I18N.en.subtitle);
+                assertEq(document.documentElement.lang, 'en');
+            });
+            test('Diagnostic card shows Portuguese alongside Chinese when the UI is in Portuguese', function() {
+                setLanguage('pt');
+                editor.value = 'jo';
+                renderValidation();
+                showDiagnostic(highlights.querySelector('.invalid-pinyin'), true);
+                assertEq(diagnosticCard.textContent.includes('Incompatibilidade de final palatal'), true);
+                assertEq(diagnosticCard.textContent.includes('舌面音与韵母拼合不合规'), true);
+                hideDiagnostic();
+                setLanguage('en');
             });
 
             // No vowel in syllable (m, ng, etc.)
