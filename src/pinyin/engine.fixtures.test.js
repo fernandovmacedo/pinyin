@@ -155,6 +155,275 @@ const fixtures = [
     apostrophes: [],
     sandhi: [{ match: 'Nǐ', spokenTone: 2, rule: 'third-tone-sandhi' }],
   },
+
+  // ── One fixture per initial-family combination rule ──────────────────
+  // Each family's "this final never follows this initial" rule should be
+  // the one shown, and a lone confident nearest-syllable candidate (ü→u
+  // costs only half an edit) should survive as a suggestion.
+  {
+    name: 'retroflex initial with ü explains the retroflex rule, and the invalid run breaks the sandhi chain',
+    // mǎi gets no third-tone hint: its neighbor shǖ is not a parseable
+    // syllable, so for sandhi purposes the chain simply ends there.
+    text: 'Wǒ mǎi shǖ.',
+    invalid: [
+      { match: 'shǖ', rule: 'retroflex-final-mismatch', suggestion: 'shū' },
+    ],
+    apostrophes: [],
+    sandhi: [{ match: 'Wǒ', spokenTone: 2, rule: 'third-tone-sandhi' }],
+  },
+  {
+    name: 'dental sibilant with ü is flagged mid-word without disturbing the valid syllables around it',
+    text: 'Wǒmen fēnchéng sān gè xiǎozǚ.',
+    invalid: [
+      { match: 'zǚ', rule: 'dental-sibilant-final-mismatch', suggestion: 'zǔ' },
+    ],
+    apostrophes: [],
+    sandhi: [],
+  },
+  {
+    name: 'labial initial with an impossible final groups into one range but withholds an ambiguous suggestion',
+    // fa, fan, bai, dai, hai, … are all one edit from fai, so no
+    // suggestion clears the confidence margin.
+    text: 'Tā fài le hěn duō shíjiān.',
+    invalid: [{ match: 'fài', rule: 'labial-final-mismatch', suggestion: '' }],
+    apostrophes: [],
+    sandhi: [],
+  },
+  {
+    name: 'alveolar initial with ü (where nü/lü are valid but tü is not)',
+    text: 'Wǒ ài chī tǚdòu.',
+    invalid: [
+      { match: 'tǚ', rule: 'alveolar-final-mismatch', suggestion: 'tǔ' },
+    ],
+    apostrophes: [],
+    sandhi: [],
+  },
+  {
+    name: 'velar initial with ü inside a compound word',
+    text: 'Dòngwùyuán yǒu lǎohǚ.',
+    invalid: [{ match: 'hǚ', rule: 'velar-final-mismatch', suggestion: 'hǔ' }],
+    apostrophes: [],
+    sandhi: [],
+  },
+  {
+    name: 'ü kept after y gets the zero-onset rule and the plain-u respelling',
+    text: 'Xià yǚ le.',
+    invalid: [{ match: 'yǚ', rule: 'zero-onset-mismatch', suggestion: 'yǔ' }],
+    apostrophes: [],
+    sandhi: [],
+  },
+  {
+    name: 'ü after a palatal mid-word falls back to the palatal combination rule',
+    // The dedicated umlaut-spelling-after-palatal check only fires when
+    // the whole run is one syllable (like the standalone qǘn fixture);
+    // embedded in xǖyào, the xǖ still gets the right family rule and the
+    // right respelling via the generic nearest-syllable path.
+    text: 'Wǒ xǖyào xiūxi.',
+    invalid: [
+      { match: 'xǖ', rule: 'palatal-final-mismatch', suggestion: 'xū' },
+    ],
+    apostrophes: [],
+    sandhi: [],
+  },
+
+  // ── The v-for-ü typing convention ────────────────────────────────────
+  {
+    name: 'v is read as ü, so lv-style spellings validate silently',
+    text: 'Wǒ xǐhuan lvsè.',
+    invalid: [],
+    apostrophes: [],
+    sandhi: [{ match: 'Wǒ', spokenTone: 2, rule: 'third-tone-sandhi' }],
+  },
+  {
+    name: 'jv normalizes to jü, which is still wrong after a palatal: write ju',
+    text: 'Wǒ chī jvzi.',
+    invalid: [
+      { match: 'jv', rule: 'palatal-final-mismatch', suggestion: 'ju' },
+    ],
+    apostrophes: [],
+    sandhi: [],
+  },
+
+  // ── More tone-mark placement and respelling coverage ─────────────────
+  {
+    name: 'the two classic placement traps (ui and iu take the tone on the last letter), plus bù sandhi on the misspelled neighbor',
+    // dùi is misspelled but still parses as the syllable dui with a 4th
+    // tone, so the bù before it correctly picks up bu-tone-sandhi.
+    text: 'Zhè bù dùi, nà yǒu lìu běn.',
+    invalid: [
+      { match: 'dùi', rule: 'tone-mark-placement', suggestion: 'duì' },
+      { match: 'lìu', rule: 'tone-mark-placement', suggestion: 'liù' },
+    ],
+    apostrophes: [],
+    sandhi: [{ match: 'bù', spokenTone: 2, rule: 'bu-tone-sandhi' }],
+  },
+  {
+    name: 'the other two abbreviated finals (uei→ui, uen→un), each also readable as two run-together syllables',
+    // Like the niou fixture: cūen is either cūn spelled long or cū + en
+    // missing an apostrophe, and guěi is either guǐ or gu + ěi. Both
+    // checks report their own reading.
+    text: 'Nàge cūen yǒu guěi.',
+    invalid: [
+      { match: 'cūen', rule: 'abbreviated-final-spelling', suggestion: 'cūn' },
+      { match: 'guěi', rule: 'abbreviated-final-spelling', suggestion: 'guǐ' },
+    ],
+    apostrophes: [
+      { match: 'cūen', suggestion: "cū'en" },
+      { match: 'guěi', suggestion: "gu'ěi" },
+    ],
+    sandhi: [],
+  },
+  {
+    name: 'zero-onset spelling with a u-final: uo must be written wo',
+    text: 'Uǒ ài nǐ.',
+    invalid: [{ match: 'Uǒ', rule: 'zero-onset-spelling', suggestion: 'wǒ' }],
+    apostrophes: [],
+    sandhi: [],
+  },
+  {
+    name: 'a bare unfinished initial is flagged with the fallback table rule and no suggestion',
+    // This is what the editor's compositionRange exists to suppress
+    // while the syllable is still being typed.
+    text: 'Nǐ hǎo zh',
+    invalid: [
+      { match: 'zh', rule: 'initial-final-table-mismatch', suggestion: '' },
+    ],
+    apostrophes: [],
+    sandhi: [{ match: 'Nǐ', spokenTone: 2, rule: 'third-tone-sandhi' }],
+  },
+
+  // ── More apostrophe coverage ─────────────────────────────────────────
+  {
+    name: 'missing apostrophes before o and inside a proper name; the diagnostic spans just the affected pair',
+    // Tiānānmén yields one diagnostic covering Tiānān (mén starts with a
+    // consonant, so the second boundary is fine as written).
+    text: 'Wǒmen zài Tiānānmén kàn hǎiōu.',
+    invalid: [],
+    apostrophes: [
+      { match: 'Tiānān', suggestion: "Tiān'ān" },
+      { match: 'hǎiōu', suggestion: "hǎi'ōu" },
+    ],
+    sandhi: [],
+  },
+  {
+    name: 'a curly apostrophe splits runs, so a correctly separated name is not flagged',
+    text: 'Tiān’ānmén hěn dà.',
+    invalid: [],
+    apostrophes: [],
+    sandhi: [],
+  },
+
+  // ── More sandhi composition ──────────────────────────────────────────
+  {
+    name: 'yī in all three of its contexts: 4th before tones 1–3, 2nd before a 4th, inside compounds too',
+    text: 'Yī nián, yīqǐ, yīyàng.',
+    invalid: [],
+    apostrophes: [],
+    sandhi: [
+      { match: 'Yī', spokenTone: 4, rule: 'yi-tone-sandhi' },
+      { match: 'yī', spokenTone: 4, rule: 'yi-tone-sandhi' },
+      { match: 'yī', occurrence: 1, spokenTone: 2, rule: 'yi-tone-sandhi' },
+    ],
+  },
+  {
+    name: 'bù sandhi fires inside an unspaced compound word',
+    text: 'Zhège cài bùcuò.',
+    invalid: [],
+    apostrophes: [],
+    sandhi: [{ match: 'bù', spokenTone: 2, rule: 'bu-tone-sandhi' }],
+  },
+  {
+    name: 'a chain of four third tones resolves pairwise: every syllable but the last is spoken second',
+    text: 'Wǒ yě hěn hǎo.',
+    invalid: [],
+    apostrophes: [],
+    sandhi: [
+      { match: 'Wǒ', spokenTone: 2, rule: 'third-tone-sandhi' },
+      { match: 'yě', spokenTone: 2, rule: 'third-tone-sandhi' },
+      { match: 'hěn', spokenTone: 2, rule: 'third-tone-sandhi' },
+    ],
+  },
+  {
+    name: 'a comma is a phrase break: the third tones on either side of it do not pair',
+    text: 'Nǐ hǎo, wǒ hǎo.',
+    invalid: [],
+    apostrophes: [],
+    sandhi: [
+      { match: 'Nǐ', spokenTone: 2, rule: 'third-tone-sandhi' },
+      { match: 'wǒ', spokenTone: 2, rule: 'third-tone-sandhi' },
+    ],
+  },
+  {
+    name: 'a bare newline is also a phrase break, even with no punctuation',
+    text: 'Nǐ hǎo\nWǒ hǎo',
+    invalid: [],
+    apostrophes: [],
+    sandhi: [
+      { match: 'Nǐ', spokenTone: 2, rule: 'third-tone-sandhi' },
+      { match: 'Wǒ', spokenTone: 2, rule: 'third-tone-sandhi' },
+    ],
+  },
+  {
+    name: 'hyphens and apostrophes keep syllables adjacent, so sandhi crosses them',
+    text: "Xiǎo-mǎ hěn kě'ài.",
+    invalid: [],
+    apostrophes: [],
+    sandhi: [
+      { match: 'Xiǎo', spokenTone: 2, rule: 'third-tone-sandhi' },
+      { match: 'mǎ', spokenTone: 2, rule: 'third-tone-sandhi' },
+      { match: 'hěn', spokenTone: 2, rule: 'third-tone-sandhi' },
+    ],
+  },
+  {
+    name: 'a written-toneless (neutral) syllable between two third tones blocks the pair',
+    text: 'Nǐmen hǎo ma?',
+    invalid: [],
+    apostrophes: [],
+    sandhi: [],
+  },
+  {
+    name: 'all-caps text still parses, and its sandhi hint still fires',
+    text: 'NǏ HǍO MA?',
+    invalid: [],
+    apostrophes: [],
+    sandhi: [{ match: 'NǏ', spokenTone: 2, rule: 'third-tone-sandhi' }],
+  },
+
+  // ── Everything at once ───────────────────────────────────────────────
+  {
+    name: 'repeated misspellings are each flagged, and a misplaced tone mark still counts as third tone for sandhi',
+    // xǐao normalizes to the parseable syllable xiao carrying tone 3, so
+    // the second xǐao (before gǒu) gets a third-tone hint even while
+    // both occurrences are flagged for tone-mark placement.
+    text: 'Zhèlǐ yǒu xǐao māo hé xǐao gǒu.',
+    invalid: [
+      { match: 'xǐao', rule: 'tone-mark-placement', suggestion: 'xiǎo' },
+      {
+        match: 'xǐao',
+        occurrence: 1,
+        rule: 'tone-mark-placement',
+        suggestion: 'xiǎo',
+      },
+    ],
+    apostrophes: [],
+    sandhi: [
+      { match: 'lǐ', spokenTone: 2, rule: 'third-tone-sandhi' },
+      { match: 'yǒu', spokenTone: 2, rule: 'third-tone-sandhi' },
+      {
+        match: 'xǐao',
+        occurrence: 1,
+        spokenTone: 2,
+        rule: 'third-tone-sandhi',
+      },
+    ],
+  },
+  {
+    name: 'digit tone numbers are not diagnosed: the editor converts them at the keystroke, not here',
+    text: 'wo3 hao3',
+    invalid: [],
+    apostrophes: [],
+    sandhi: [],
+  },
 ];
 
 for (const fixture of fixtures) {
