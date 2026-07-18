@@ -7,6 +7,7 @@ Pages and when downloaded and opened directly with a browser.
 ## Repository layout
 
 - `index.html` — the small Vite entry document and semantic page markup.
+- `src/main.js` — the Vite module entry point; imports the stylesheet and `app.js`.
 - `src/app.js` — application startup and editor behavior.
 - `src/styles/app.css` — editor styles.
 - `src/data/rules.json` — the single source of truth for Pinyin knowledge.

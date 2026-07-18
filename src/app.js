@@ -1,14 +1,39 @@
 import pinyinRulesManifest from './data/rules.json';
 import { validateRulesManifest } from './rules/manifest.js';
 
+// Wrap localStorage access: some browser privacy settings (e.g. Chrome's
+// "Block all cookies") make every localStorage call throw a SecurityError,
+// which would otherwise abort this module before it attaches a single
+// event listener. Preferences and the draft just don't persist there.
+function storageGet(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+function storageSet(key, value) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Ignore: storage unavailable.
+  }
+}
+function storageRemove(key) {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // Ignore: storage unavailable.
+  }
+}
 // Theme handling
 function setTheme(theme) {
   if (theme === 'auto') {
     document.documentElement.removeAttribute('data-theme');
-    localStorage.removeItem('theme');
+    storageRemove('theme');
   } else {
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
+    storageSet('theme', theme);
   }
   // Update theme buttons
   document.querySelectorAll('[data-theme-choice]').forEach((button) => {
@@ -19,7 +44,7 @@ function setTheme(theme) {
   });
 }
 // Load saved theme or default to auto
-setTheme(localStorage.getItem('theme') || 'auto');
+setTheme(storageGet('theme') || 'auto');
 document.querySelectorAll('[data-theme-choice]').forEach((button) => {
   button.addEventListener('click', function () {
     setTheme(this.dataset.themeChoice);
@@ -130,7 +155,7 @@ const instructionsItems = document.querySelectorAll('.instructions li');
 const instructionsExample = document.querySelector('.instructions p');
 let uiLang = 'en';
 function detectInitialLang() {
-  const stored = localStorage.getItem('lang');
+  const stored = storageGet('lang');
   if (stored === 'en' || stored === 'pt') {
     return stored;
   }
@@ -183,7 +208,7 @@ function applyLanguageStrings() {
 }
 function setLanguage(lang) {
   uiLang = lang;
-  localStorage.setItem('lang', lang);
+  storageSet('lang', lang);
   applyLanguageStrings();
 }
 langToggle.addEventListener('click', function () {
@@ -290,7 +315,7 @@ const TONED_VOWEL_BASES = new Map([
 let compStart = null; // Start index of composition, or null if not composing
 let pinyinValidationEnabled = true;
 // Show tone colors by default; retain an explicit opt-out for returning users.
-let toneColoringEnabled = localStorage.getItem('toneColors') !== 'off';
+let toneColoringEnabled = storageGet('toneColors') !== 'off';
 // Tracks the last text written to (or read from) the 'draft' localStorage
 // key, so renderValidation only writes when the text actually changed.
 let lastSavedDraft = '';
@@ -787,9 +812,11 @@ function getMissingApostropheDiagnostics(text) {
       }
       const prev = segments[i - 1];
       const clause = run.substring(prev.start, curr.end);
+      // Match rules.json's own examples (Xi'an, nü'er), which use the
+      // plain ASCII apostrophe rather than the curly Unicode one.
       const suggestion =
         run.substring(prev.start, curr.start) +
-        '’' +
+        "'" +
         run.substring(curr.start, curr.end);
       diagnostics.push({
         start: runStart + prev.start,
@@ -1015,9 +1042,9 @@ function saveDraftIfChanged(text) {
   }
   lastSavedDraft = text;
   if (text) {
-    localStorage.setItem('draft', text);
+    storageSet('draft', text);
   } else {
-    localStorage.removeItem('draft');
+    storageRemove('draft');
   }
 }
 // Encode UTF-8 text as URL-safe base64 (RFC 4648 §5, unpadded), so a
@@ -1194,7 +1221,7 @@ function setPinyinValidation(enabled) {
 }
 function setToneColoring(enabled) {
   toneColoringEnabled = enabled;
-  localStorage.setItem('toneColors', enabled ? 'on' : 'off');
+  storageSet('toneColors', enabled ? 'on' : 'off');
   toneColorToggle.setAttribute('aria-pressed', String(enabled));
   const t = I18N[uiLang];
   toneColorToggle.textContent = t.toneColorsBtn;
@@ -1554,7 +1581,7 @@ function handleKeyDown(e) {
     return;
   }
   // Handle other printable characters while composing
-  if (compStart !== null && key.length === 1 && !key.startsWith('F')) {
+  if (compStart !== null && key.length === 1) {
     // Commit first, then let character through
     commitComposition();
   }
@@ -1639,6 +1666,17 @@ function handlePaste(e) {
 // keydown events. Intercept their plain-text insertions before the
 // browser applies them and run them through the same converter.
 function handleBeforeInput(e) {
+  // Dragging text into the editor is not run through the tone-number
+  // converter, but it does splice editor.value directly at the drop
+  // point without our knowledge. Commit any open composition first so
+  // its compStart offset (an index into the old value) cannot end up
+  // pointing at the wrong characters afterward.
+  if (e.inputType === 'insertFromDrop') {
+    if (compStart !== null) {
+      commitComposition();
+    }
+    return;
+  }
   if (e.inputType !== 'insertText' || !e.data || e.isComposing) {
     return;
   }
@@ -1710,10 +1748,36 @@ function flashButtonLabel(btn, message) {
   }, 1500);
   pendingButtonFlashes.set(btn, { original, timeoutId });
 }
+// Copy text to the clipboard. navigator.clipboard is only defined in
+// secure contexts (https:, file:, localhost), so a copy of this page
+// served over plain http: (e.g. shared on a LAN) would otherwise throw
+// synchronously instead of rejecting the promise the callers expect.
+// Fall back to the older execCommand('copy') path in that case.
+function copyTextToClipboard(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    return navigator.clipboard.writeText(text);
+  }
+  return new Promise(function (resolve, reject) {
+    const scratch = document.createElement('textarea');
+    scratch.value = text;
+    scratch.style.position = 'fixed';
+    scratch.style.opacity = '0';
+    document.body.appendChild(scratch);
+    scratch.focus();
+    scratch.select();
+    try {
+      const done = document.execCommand('copy');
+      done ? resolve() : reject(new Error('execCommand copy failed'));
+    } catch (err) {
+      reject(err);
+    } finally {
+      document.body.removeChild(scratch);
+    }
+  });
+}
 // Copy button
 copyBtn.addEventListener('click', function () {
-  navigator.clipboard
-    .writeText(editor.value)
+  copyTextToClipboard(editor.value)
     .then(function () {
       flashButtonLabel(copyBtn, I18N[uiLang].copyDone);
     })
@@ -1725,8 +1789,7 @@ copyBtn.addEventListener('click', function () {
 // in the hash fragment (not stored as the draft — see resolveInitialText).
 shareBtn.addEventListener('click', function () {
   const url = buildShareUrl(editor.value, window.location.href);
-  navigator.clipboard
-    .writeText(url)
+  copyTextToClipboard(url)
     .then(function () {
       flashButtonLabel(shareBtn, I18N[uiLang].shareDone);
     })
@@ -1755,7 +1818,7 @@ setLanguage(detectInitialLang());
 // Restore a shared link's text (and strip it from the address bar so
 // reloading or bookmarking doesn't keep re-sharing it) or, failing
 // that, the draft saved from a previous visit.
-const storedDraft = localStorage.getItem('draft') || '';
+const storedDraft = storageGet('draft') || '';
 const initial = resolveInitialText(window.location.hash, storedDraft);
 if (initial.text) {
   editor.value = initial.text;
@@ -1789,6 +1852,7 @@ window.addEventListener('hashchange', function () {
   compStart = null;
   editor.value = shared;
   lastSavedDraft = shared;
+  updateIndicator();
   hideDiagnostic();
   const cleanUrl = new URL(window.location.href);
   cleanUrl.hash = '';
