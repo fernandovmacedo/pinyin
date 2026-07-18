@@ -1,18 +1,20 @@
 # Pinyin Typing
 
-A standalone browser editor for typing Hanyu Pinyin with tone marks. The input convention (syllable + tone number, `v` for `ü`) follows the [PinyinTones](https://www.pinyintones.com/) Windows IME.
-
 No installation is needed—just visit [Pinyin Typing](https://fernandovmacedo.github.io/pinyin/) and start typing.
 
-Type a Pinyin syllable followed by `1`, `2`, `3`, or `4` to apply a tone mark. To change an existing syllable's tone, place the caret on it and press `1`–`4`; press `5` to remove its tone mark for the neutral tone. Type `v` for `ü` and `V` for `Ü`; type `vv` for a literal `v`. Press Enter to accept the current syllable and Escape to cancel it.
+A standalone browser editor for typing Hanyu Pinyin with tone marks: type a syllable followed by its tone number, with `v` standing in for `ü`.
 
-The editor works with physical and mobile virtual keyboards. Type a syllable followed by its tone number to convert it.
+Type a Pinyin syllable followed by `1`, `2`, `3`, or `4` to apply a tone mark. To change an existing syllable's tone, place the caret on it and press `1`–`4`; press `5` to remove its tone mark for the neutral tone. Type `v` for `ü` and `V` for `Ü`; type `vv` for a literal `v`. Press Enter to accept the current syllable and Escape to cancel it. The editor works with physical and mobile virtual keyboards.
 
-Pinyin checking is enabled by default and marks invalid syllables with a red wavy underline. It recognizes adjacent syllables such as `nǐhǎo` and erhua spellings such as `wánr`; use **Check** to turn validation off while writing non-Pinyin text. Hover an underline for a bilingual explanation, examples, and sources; click or tap it to keep the explanation open.
+Pinyin checking is enabled by default and marks invalid syllables with a red wavy underline. It recognizes adjacent syllables such as `nǐhǎo` and erhua spellings such as `wánr`; use **Check** to turn validation off while writing non-Pinyin text. Hover an underline for an explanation with examples and sources, shown in the interface language alongside Chinese; click or tap it to keep the explanation open.
+
+When a misspelling is close to exactly one valid syllable, the explanation adds a "Did you mean" suggestion — `qvn` suggests `qun`, and rule-aware corrections cover cases like tone marks on the wrong vowel, zero-onset spellings (`ie` → `ye`), and `ü` written after `j`, `q`, or `x`. If several syllables are equally close, no guess is made.
 
 A dotted underline marks a missing apostrophe between two syllables, such as `Xian` where `Xi'an` was intended. This only fires on text typed with its own tone marks, since that is what tells `Xi'an` (two syllables) apart from `xiàn` (one).
 
-**Tone colors** is enabled by default and tints each syllable by its tone number. Use the toggle to turn it off.
+Tone colors are enabled by default and tint each syllable by its tone number. Use the **Colors** toggle to turn them off.
+
+The interface is available in English and Portuguese: it follows your browser language and can be switched at any time with the **EN**/**PT** button, which also switches the language of the checker's explanations.
 
 Pasting text written with tone numbers (e.g. `Ni3 hao3! Wo3 jiao4 Li3 Ming2, hen3 gao1xing4 ren4shi ni3.`) converts it the same way as typing it.
 
@@ -20,32 +22,13 @@ Your text is saved automatically in this browser and restored on your next visit
 
 ## Pinyin rules
 
-[`rules.json`](rules.json) is the single source of truth for valid syllables, teaching explanations, examples, and citations. Its rules are based on the official Hanyu Pinyin Scheme and ISO 7098, with University of Iowa compatibility lessons and UT Austin pronunciation instruction used for learner-facing guidance. The explanations are original summaries of those sources.
+[`rules.json`](rules.json) holds the valid syllables, teaching explanations, examples, and citations. Its rules are based on the official Hanyu Pinyin Scheme and ISO 7098, with University of Iowa compatibility lessons and UT Austin pronunciation instruction used for learner-facing guidance. The explanations are original summaries of those sources, written in English, Chinese, and Portuguese.
 
 For example, `Ni3 hao3! Wo3 jiao4 Li3 Ming2, hen3 gao1xing4 ren4shi ni3.` becomes `Nǐ hǎo! Wǒ jiào Lǐ Míng, hěn gāoxìng rènshi nǐ.` ("Hello! My name is Li Ming, nice to meet you." — all four tones plus the neutral tone.)
 
-## Run locally
+## Development
 
-The editor loads `rules.json` at runtime, so serve the directory over localhost rather than opening `index.html` directly:
-
-```sh
-python3 -m http.server 8896
-```
-
-Then open [http://localhost:8896/](http://localhost:8896/).
-
-Run the browser tests headlessly (requires a `google-chrome` binary on `PATH`):
-
-```sh
-npm test
-```
-
-## Continuous integration and deployment
-
-GitHub Actions runs the browser tests for every push and pull request. Pushes to
-`master` that pass the tests also deploy this directory's `index.html` and
-`rules.json` to GitHub Pages. Before the first deployment, set the repository's
-**Pages** source to **GitHub Actions** in its GitHub settings.
+See [`AGENTS.md`](AGENTS.md) for how to run the editor locally, run the tests, and how the repository is laid out. GitHub Actions runs the browser tests for every push and pull request, and pushes to `master` that pass the tests deploy the site to GitHub Pages.
 
 ## License
 
