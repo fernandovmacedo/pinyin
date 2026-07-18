@@ -51,9 +51,11 @@ rules shown in explanation cards).
 
 `validateRulesManifest` runs at startup. Every source needs `id`, `url`,
 and `title.en` / `title.zh`. Every rule needs `id`, `title.en` /
-`title.zh`, `explanation.en` / `explanation.zh`, and a non-empty
-`sources` array referencing known source ids. Portuguese (`pt`) titles and
-explanations are optional and fall back to English.
+`title.zh`, `explanation.en` / `explanation.zh`, a non-empty `sources`
+array referencing known source ids, an `initials` array (empty if the
+rule is not initial-specific), and a non-empty `examples` array.
+Portuguese (`pt`) titles and explanations are optional and fall back to
+English.
 
 ## Build and deployment
 

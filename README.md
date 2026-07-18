@@ -13,7 +13,7 @@ Pinyin checking is enabled by default and marks invalid syllables with a red wav
 
 When a misspelling is close to exactly one valid syllable, the explanation adds a "Did you mean" suggestion — `qvn` suggests `qun`, and rule-aware corrections cover cases like tone marks on the wrong vowel, zero-onset spellings (`ie` → `ye`), and `ü` written after `j`, `q`, or `x`. If several syllables are equally close, no guess is made.
 
-A dotted underline marks a missing apostrophe between two syllables, such as `Xian` where `Xi'an` was intended. This only fires on text typed with its own tone marks, since that is what tells `Xi'an` (two syllables) apart from `xiàn` (one).
+A dotted underline marks a missing apostrophe between two syllables, such as `haiou` where `hai'ou` was intended. It fires whenever a run of letters only parses as valid Pinyin by splitting it into multiple syllables with no separator. Where the same letters could be one syllable or several depending on tone — `xian` (one syllable) versus `xi'an` (two) — each syllable's own tone marks are what tells them apart.
 
 Tone colors are enabled by default and tint each syllable by its tone number. Use the **Colors** toggle to turn them off.
 

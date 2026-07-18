@@ -157,6 +157,7 @@ h1 a {
 #validation-highlights {
   min-height: 200px;
   padding: 15px;
+  border: 2px solid transparent;
   font-family: 'Segoe UI', 'Microsoft YaHei', 'SimHei', Arial, sans-serif;
   font-size: 18px;
   line-height: 1.6;
@@ -274,6 +275,18 @@ h1 a {
   background: transparent;
   color: transparent;
   caret-color: var(--text-primary);
+  /* A visible native scrollbar would shrink the textarea's content
+     width without shrinking the validation-highlights layer beneath
+     it (that layer is clipped, not scrolled, so it never gets a
+     scrollbar of its own), letting long text wrap differently in the
+     two layers. Hiding it removes that mismatch; scrolling still
+     works via wheel, keyboard, and drag-select, and syncValidationScroll
+     keeps the highlight layer following scrollTop/scrollLeft either way. */
+  scrollbar-width: none;
+}
+
+#editor::-webkit-scrollbar {
+  display: none;
 }
 
 #editor:focus {

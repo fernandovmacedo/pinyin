@@ -1,6 +1,6 @@
 # Downloaded cited sources
 
-Retrieved 2026-07-17 from the URLs recorded in [`../rules.json`](../rules.json).
+Retrieved 2026-07-17 from the URLs recorded in [`../src/data/rules.json`](../src/data/rules.json).
 Files are the cited documents where redistribution is permitted. The ISO 7098
 text is linked rather than stored because ISO standards are copyrighted. The
 Mastering Mandarin Sounds EPUB (CC BY-NC 4.0) has its embedded media removed

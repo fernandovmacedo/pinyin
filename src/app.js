@@ -1,7 +1,6 @@
 import pinyinRulesManifest from './data/rules.json';
 import { validateRulesManifest } from './rules/manifest.js';
 
-('use strict');
 // Theme handling
 function setTheme(theme) {
   if (theme === 'auto') {
@@ -811,7 +810,7 @@ function getToneRanges(text) {
   const ranges = [];
   forEachPinyinRun(text, (runStart, end) => {
     const run = text.substring(runStart, end);
-    for (const segment of findSyllableSegments(run)) {
+    for (const segment of findSpokenSyllableSegments(run)) {
       const spelling = run.substring(segment.start, segment.end);
       const tone = Array.from(spelling, (ch) => lookupChar(ch) % 5).find(
         (value) => value > 0,
@@ -1009,8 +1008,7 @@ function showDiagnostic(target, pinned = false) {
   }
   positionDiagnosticCard(target);
 }
-// Persist the current text as the user's draft, skipped entirely in
-// ?test mode so the self-tests never read or write real localStorage.
+// Persist the current text as the user's draft.
 function saveDraftIfChanged(text) {
   if (text === lastSavedDraft) {
     return;
@@ -1674,27 +1672,43 @@ function handleMouseInteraction() {
   }
 }
 // Briefly replace a button's label (e.g. "Copied!") before restoring it.
+// A pending flash's own original snapshot is reused on repeat clicks
+// (with its restore timer reset) so a click during the flash window
+// cannot capture the flashed state as the "original" to restore to.
+const pendingButtonFlashes = new WeakMap();
 function flashButtonLabel(btn, message) {
+  const pending = pendingButtonFlashes.get(btn);
+  if (pending) {
+    clearTimeout(pending.timeoutId);
+  }
+  const original = pending
+    ? pending.original
+    : btn.classList.contains('icon-button')
+      ? {
+          content: btn.innerHTML,
+          label: btn.getAttribute('aria-label'),
+          title: btn.getAttribute('title'),
+        }
+      : { text: btn.textContent };
   if (btn.classList.contains('icon-button')) {
-    const originalContent = btn.innerHTML;
-    const originalLabel = btn.getAttribute('aria-label');
-    const originalTitle = btn.getAttribute('title');
     btn.innerHTML =
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"></path></svg>';
     btn.setAttribute('aria-label', message);
     btn.setAttribute('title', message);
-    setTimeout(function () {
-      btn.innerHTML = originalContent;
-      btn.setAttribute('aria-label', originalLabel);
-      btn.setAttribute('title', originalTitle);
-    }, 1500);
-    return;
+  } else {
+    btn.textContent = message;
   }
-  const originalText = btn.textContent;
-  btn.textContent = message;
-  setTimeout(function () {
-    btn.textContent = originalText;
+  const timeoutId = setTimeout(function () {
+    pendingButtonFlashes.delete(btn);
+    if (btn.classList.contains('icon-button')) {
+      btn.innerHTML = original.content;
+      btn.setAttribute('aria-label', original.label);
+      btn.setAttribute('title', original.title);
+    } else {
+      btn.textContent = original.text;
+    }
   }, 1500);
+  pendingButtonFlashes.set(btn, { original, timeoutId });
 }
 // Copy button
 copyBtn.addEventListener('click', function () {
@@ -1707,8 +1721,8 @@ copyBtn.addEventListener('click', function () {
       console.error('Copy failed:', err);
     });
 });
-// Share button: copies a URL with the current text as a ?text= param
-// (not stored as the draft — see resolveInitialText).
+// Share button: copies a URL with the current text base64url-encoded
+// in the hash fragment (not stored as the draft — see resolveInitialText).
 shareBtn.addEventListener('click', function () {
   const url = buildShareUrl(editor.value, window.location.href);
   navigator.clipboard
@@ -1721,9 +1735,10 @@ shareBtn.addEventListener('click', function () {
     });
 });
 // Clear button
-document.getElementById('clear-btn').addEventListener('click', function () {
+clearBtn.addEventListener('click', function () {
   editor.value = '';
   compStart = null;
+  hideDiagnostic();
   updateIndicator();
   scheduleValidation();
 });
@@ -1774,6 +1789,7 @@ window.addEventListener('hashchange', function () {
   compStart = null;
   editor.value = shared;
   lastSavedDraft = shared;
+  hideDiagnostic();
   const cleanUrl = new URL(window.location.href);
   cleanUrl.hash = '';
   history.replaceState(

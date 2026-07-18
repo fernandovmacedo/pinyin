@@ -30,7 +30,10 @@ export function validateRulesManifest(manifest) {
       !rule.explanation?.en ||
       !rule.explanation?.zh ||
       !Array.isArray(rule.sources) ||
-      rule.sources.length === 0
+      rule.sources.length === 0 ||
+      !Array.isArray(rule.initials) ||
+      !Array.isArray(rule.examples) ||
+      rule.examples.length === 0
     ) {
       throw new Error('A teaching rule is incomplete.');
     }
