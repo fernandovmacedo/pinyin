@@ -1,12 +1,34 @@
 # Pinyin Typing
 
-[Open Pinyin Typing](https://fernandovmacedo.github.io/pinyin/) — a standalone
-browser editor for writing Hanyu Pinyin with tone marks. Type a syllable and
-its tone number; use `v` for `ü`.
+**Fast, private Pinyin typing with live, source-backed feedback.**
 
-No installation is needed to use the editor. You can visit the hosted version,
-save that page, or open the committed `dist/index.html` directly in a browser.
-The application and its Pinyin rules are embedded in that one file.
+[Open Pinyin Typing](https://fernandovmacedo.github.io/pinyin/) and type a
+syllable followed by its tone number: `Ni3 hao3` becomes `Nǐ hǎo`. The editor
+adds the right tone marks, checks your spelling, and explains problems while
+you write. No special keyboard, account, or installation is needed.
+
+## Features
+
+- **Fast tone-mark input:** type `1`–`4` after a syllable, `5` for the neutral
+  tone, and `v` for `ü`. Retone existing text in place or paste an entire
+  passage written with tone numbers.
+- **Live Pinyin checking:** catch invalid syllables, misplaced tone marks, and
+  missing or unnecessary apostrophes. The checker understands adjacent
+  syllables, erhua, and accepted regional spellings, and suggests a correction
+  for clear near-misses.
+- **Learning as you type:** open any underline to see a plain-language
+  explanation, contrasting examples, and the sources behind the rule.
+  Non-blocking hints explain third-tone sandhi and the tone changes of `bù` and
+  `yī`.
+- **Tone visualization:** optional colors make the four tones easy to scan,
+  even when syllables are written together.
+- **Comfortable on any device:** use a physical or mobile keyboard, choose a
+  system, light, or dark theme, and switch the interface between English and
+  Portuguese.
+- **Private, portable, and offline:** drafts and preferences stay in your
+  browser. Share links carry text in the URL fragment rather than sending it to
+  a server. The complete app and its rules are also available as one
+  self-contained HTML file that works directly from disk.
 
 ## Typing Pinyin
 
